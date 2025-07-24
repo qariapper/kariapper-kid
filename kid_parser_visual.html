@@ -25,7 +25,7 @@
     }
 
     function isDID(input) {
-      return input.startsWith("ALK") && /^[ALK.\d]+$/.test(input);
+      return input.startsWith("ALK") && /^ALK(\.|\.\d+)*$/.test(input);
     }
 
     function isKSID(input) {
@@ -35,11 +35,9 @@
     function parseKIDSegment(seg) {
       const match = seg.match(/(\d+)([xy])((\d+[a-z])*)/);
       if (!match) return null;
-
       const order = parseInt(match[1]);
       const gender = match[2] === 'x' ? 'female' : 'male';
       const tagStr = match[3];
-
       const tags = [...tagStr.matchAll(/(\d+)([a-z])/g)].map(m => {
         const val = parseInt(m[1]);
         const tag = m[2];
@@ -47,7 +45,6 @@
         if (tag === 't') return `part of a ${val}-tuplet`;
         return `${val}× ${tag}`;
       });
-
       return { order, gender, tags };
     }
 
@@ -97,20 +94,27 @@
           </div>`;
         });
       } else if (isDID(input)) {
-        const segments = parseDID(input);
+        const segments = input.split(".").slice(1);
         output.innerHTML = `<h3>dID Lineage from Founder (ALK):</h3>`;
+        output.innerHTML += `<div class="segment">➤ Generation 1: Founder, ALK</div>`;
         segments.forEach((seg, i) => {
-          output.innerHTML += `<div class="segment">
-            ➤ Generation ${i + 1}: <span class="highlight">${ordinal(seg.birthOrder)} child</span>
-          </div>`;
+          if (seg) {
+            output.innerHTML += `<div class="segment">➤ Generation ${i + 2}: <span class="highlight">${ordinal(parseInt(seg))} child</span></div>`;
+          }
         });
       } else if (isKSID(input)) {
+        if (input.length === 0 || input[0] !== 'A') {
+          output.innerHTML = `<p>❌ Could not identify ID type. Please check your input.</p>`;
+          return;
+        }
         const lineage = parseKSID(input);
         output.innerHTML = `<h3>KSID Lineage from Founder (ALK):</h3>`;
         lineage.forEach(p => {
-          output.innerHTML += `<div class="segment">
-            ➤ Generation ${p.level}: <span class="highlight">${ordinal(p.birthOrder)} ${p.gender}</span> (letter: ${p.letter})
-          </div>`;
+          if (p.level === 1) {
+            output.innerHTML += `<div class="segment">➤ Generation 1: Founder, male and 1st child of his father (Letter ${p.letter})</div>`;
+          } else {
+            output.innerHTML += `<div class="segment">➤ Generation ${p.level}: <span class="highlight">${ordinal(p.birthOrder)} child</span> (letter: ${p.letter}), ${p.gender}</div>`;
+          }
         });
       } else {
         output.innerHTML = `<p>❌ Could not identify ID type. Please check your input.</p>`;
