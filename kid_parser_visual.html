@@ -123,6 +123,10 @@
     }
 
     document.getElementById("idInput").addEventListener("input", updateOutput);
+    window.onload = () => {
+      document.getElementById("idInput").value = "";
+      document.getElementById("output").innerHTML = "";
+    };
   </script>
 </body>
 </html>
