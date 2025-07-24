@@ -21,11 +21,11 @@
 
   <script>
     function isKID(input) {
-      return input.startsWith("ALK") && /[xy]/.test(input);
+      return input.startsWith("ALK.") && /[xy]/.test(input);
     }
 
     function isDID(input) {
-      return input.startsWith("ALK") && /^ALK(\.|\.\d+)*$/.test(input);
+      return input.startsWith("ALK.") && /^ALK(\.\d+)*$/.test(input);
     }
 
     function isKSID(input) {
@@ -82,6 +82,7 @@
       if (isKID(input)) {
         const segments = input.split(".").slice(1);
         output.innerHTML = `<h3>KID Lineage from Founder (ALK):</h3>`;
+        output.innerHTML += `<div class="segment">➤ Generation 1: Founder, ALK</div>`;
         segments.forEach((seg, i) => {
           const result = parseKIDSegment(seg);
           if (!result) {
@@ -90,7 +91,7 @@
           }
           const tags = result.tags.length > 0 ? `<div class="tag">(${result.tags.join(", ")})</div>` : "";
           output.innerHTML += `<div class="segment">
-            ➤ Generation ${i + 1}: <span class="highlight">${ordinal(result.order)} ${result.gender}</span> ${tags}
+            ➤ Generation ${i + 2}: <span class="highlight">${ordinal(result.order)} child, ${result.gender}</span> ${tags}
           </div>`;
         });
       } else if (isDID(input)) {
