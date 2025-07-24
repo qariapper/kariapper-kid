@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kariapper ID Visual Parser</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    input { width: 100%; padding: 8px; margin: 10px 0; font-size: 1rem; }
+    .output { margin-top: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background: #f9f9f9; }
+    .segment { margin-bottom: 10px; }
+    .tag { font-size: 0.9em; color: #555; }
+    .highlight { font-weight: bold; color: #2a6; }
+  </style>
+</head>
+<body>
+  <h1>Kariapper ID Visual Parser</h1>
+  <p>Enter a KID, KSID or dID to parse (e.g., <code>ALK.1x2s.2y2t.3x</code>, <code>AAaB</code>, or <code>ALK.1.2.3</code>):</p>
+  <input id="idInput" placeholder="Enter KID / KSID / dID here" />
+  <div class="output" id="output"></div>
+
+  <script>
+    function isKID(input) {
+      return input.startsWith("ALK") && /[xy]/.test(input);
+    }
+
+    function isDID(input) {
+      return input.startsWith("ALK") && /^[ALK.\d]+$/.test(input);
+    }
+
+    function isKSID(input) {
+      return /^[A-Za-z]+$/.test(input);
+    }
+
+    function parseKIDSegment(seg) {
+      const match = seg.match(/(\d+)([xy])((\d+[a-z])*)/);
+      if (!match) return null;
+
+      const order = parseInt(match[1]);
+      const gender = match[2] === 'x' ? 'female' : 'male';
+      const tagStr = match[3];
+
+      const tags = [...tagStr.matchAll(/(\d+)([a-z])/g)].map(m => {
+        const val = parseInt(m[1]);
+        const tag = m[2];
+        if (tag === 's') return `has ${val} spouse${val > 1 ? 's' : ''}`;
+        if (tag === 't') return `part of a ${val}-tuplet`;
+        return `${val}× ${tag}`;
+      });
+
+      return { order, gender, tags };
+    }
+
+    function parseKSID(input) {
+      const parts = input.split("");
+      return parts.map((ch, i) => {
+        const gender = ch === ch.toUpperCase() ? "male" : "female";
+        const birthOrder = ch.toUpperCase().charCodeAt(0) - 64; // A=1
+        return {
+          level: i + 1,
+          gender,
+          birthOrder,
+          letter: ch
+        };
+      });
+    }
+
+    function parseDID(input) {
+      const parts = input.split(".").slice(1);
+      return parts.map((num, i) => ({ level: i + 1, birthOrder: parseInt(num) }));
+    }
+
+    function ordinal(n) {
+      return n + (n % 10 === 1 && n % 100 !== 11 ? 'st'
+              : n % 10 === 2 && n % 100 !== 12 ? 'nd'
+              : n % 10 === 3 && n % 100 !== 13 ? 'rd'
+              : 'th');
+    }
+
+    function updateOutput() {
+      const input = document.getElementById("idInput").value.trim();
+      const output = document.getElementById("output");
+      output.innerHTML = "";
+
+      if (isKID(input)) {
+        const segments = input.split(".").slice(1);
+        output.innerHTML = `<h3>KID Lineage from Founder (ALK):</h3>`;
+        segments.forEach((seg, i) => {
+          const result = parseKIDSegment(seg);
+          if (!result) {
+            output.innerHTML += `<div class="segment">❌ Could not parse segment: <code>${seg}</code></div>`;
+            return;
+          }
+          const tags = result.tags.length > 0 ? `<div class="tag">(${result.tags.join(", ")})</div>` : "";
+          output.innerHTML += `<div class="segment">
+            ➤ Generation ${i + 1}: <span class="highlight">${ordinal(result.order)} ${result.gender}</span> ${tags}
+          </div>`;
+        });
+      } else if (isDID(input)) {
+        const segments = parseDID(input);
+        output.innerHTML = `<h3>dID Lineage from Founder (ALK):</h3>`;
+        segments.forEach((seg, i) => {
+          output.innerHTML += `<div class="segment">
+            ➤ Generation ${i + 1}: <span class="highlight">${ordinal(seg.birthOrder)} child</span>
+          </div>`;
+        });
+      } else if (isKSID(input)) {
+        const lineage = parseKSID(input);
+        output.innerHTML = `<h3>KSID Lineage from Founder (ALK):</h3>`;
+        lineage.forEach(p => {
+          output.innerHTML += `<div class="segment">
+            ➤ Generation ${p.level}: <span class="highlight">${ordinal(p.birthOrder)} ${p.gender}</span> (letter: ${p.letter})
+          </div>`;
+        });
+      } else {
+        output.innerHTML = `<p>❌ Could not identify ID type. Please check your input.</p>`;
+      }
+    }
+
+    document.getElementById("idInput").addEventListener("input", updateOutput);
+  </script>
+</body>
+</html>
