@@ -52,7 +52,7 @@
   <script>
 (async function(){
   const sheetID = '1BE7PJAJs3QxHnOsb1z5cKnGHdjQCR8IksorMcAm7Fx8';
-  const initialOpenDepth = 3;
+  const initialOpenDepth = 1;
   const charW = 9;
   const leftStub = 16;
   const indexModes = ['dID', 'KID', 'KSID'];
@@ -302,7 +302,7 @@
 
   d3.select('#btnToggleGen3').on('click', () => {
     root.descendants().forEach(n => {
-      if (n.depth === 2) {
+      if (n.depth === 1) {
         if (gen3Collapsed) {
           // expand all Gen-3 if they have _children
           if (n._children) {
