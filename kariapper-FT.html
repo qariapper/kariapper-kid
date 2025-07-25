@@ -332,34 +332,6 @@
     update();
   });
 
-/*  d3.select('#btnSaveSVG').on('click', () => {
-    const svgNode = document.querySelector('#tree_div svg');
-    const clone = svgNode.cloneNode(true);
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-
-    // Grab full style from <style> in <head>
-    const cssText = Array.from(document.querySelectorAll('style'))
-      .map(style => style.innerHTML || style.textContent)
-      .join('\n');
-
-    const styleTag = document.createElementNS('http://www.w3.org/2000/svg', 'style');
-    styleTag.setAttribute('type', 'text/css');
-    styleTag.innerHTML = `<![CDATA[\n${cssText}\n]]>`;
-
-    clone.insertBefore(styleTag, clone.firstChild);
-
-    const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(clone);
-    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'family-tree.svg';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }); */
-
-
-
   update();
 })();
   </script>
