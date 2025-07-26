@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-y</h1>
+  <h1>Kariapper Family Tree-z</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -125,6 +125,8 @@
     };
   }).filter(d => d.id && d.name);
 
+  const clones = [];
+
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
@@ -134,20 +136,21 @@
       ? rows[d.index].c[secondaryIdIdx].v
       : '';
 
-    if (secondaryId && secondaryId !== d.id) {
+    if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
       const clone = { ...d };
       clone.id = secondaryId;
       clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
       clone.isSecondary = true;
-      flat.push(clone);
-      byId[clone.id] = clone;
-
-      // Link the clone to its secondary parent
-      const secParent = clone.parent && byId[clone.parent];
-      if (secParent) {
-        secParent.children = secParent.children || [];
-        secParent.children.push(clone);
-      }
+      clones.push(clone);
+    }
+  });
+  flat.push(...clones);
+  clones.forEach(clone => {
+    byId[clone.id] = clone;
+    const secParent = clone.parent && byId[clone.parent];
+    if (secParent) {
+      secParent.children = secParent.children || [];
+      secParent.children.push(clone);
     }
   });
 
