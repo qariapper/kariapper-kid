@@ -102,6 +102,21 @@
 
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
+
+  // Assign spouse group number to children
+  flat.forEach(parent => {
+    if (!parent.spouse_dIDs.length) return;
+
+    parent.spouse_dIDs.forEach((spID, i) => {
+      const groupNum = i + 1;
+      const children = flat.filter(child =>
+        child.parent === parent.id &&
+        child.comments && child.comments.includes(spID)
+      );
+      children.forEach(c => c.spouseGroupNum = groupNum);
+    });
+  });
+
   const rootData = byId['ALK'];
   if (!rootData) return document.getElementById('tree_div').textContent = '❌ root ALK not found';
 
@@ -132,7 +147,8 @@
     const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
     const index = idxMode === 'KID' && d.data.kid ? d.data.kid :
                   idxMode === 'KSID' && d.data.ksid ? d.data.ksid : d.data.id;
-    return { text: d.data.name + icon, idx: index };
+    const prefix = d.data.spouseGroupNum ? d.data.spouseGroupNum + '-' : '';
+    return { text: prefix + d.data.name + icon, idx: index };
   };
   const boxWidth = d => Math.max(80, (nodeLabel(d).text + ' ' + nodeLabel(d).idx).length * charW + 20);
 
