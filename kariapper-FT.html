@@ -39,9 +39,9 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--a</h1>
+  <h1>Kariapper Family Tree--b</h1>
   <div id="controls">
-    <button id="btnToggleGen3">Toggle Gen-2/all</button>
+    <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
     <button id="btnZoomOut">－</button>
     <button id="btnReset">Reset View</button>
@@ -387,24 +387,40 @@
   }
 
   d3.select('#btnToggleGen3').on('click', () => {
+    const showGen3 = d3.select('#btnToggleGen3').text().includes('Gen‑3');
+
+    // Reset: expand Gen‑2, collapse Gen‑3
     root.descendants().forEach(n => {
-      if (n.depth === 1) {
-        if (gen3Collapsed) {
-          // expand all Gen-3 if they have _children
-          if (n._children) {
-            n.children = n._children;
-            n._children = null;
-          }
-        } else {
-          // collapse all Gen-3 regardless of current state
-          if (n.children) {
-            n._children = n.children;
-            n.children = null;
-          }
-        }
+      if (n.depth === 1 && n._children) {
+        n.children = n._children;
+        n._children = null;
+      }
+      if (n.depth === 2 && n.children) {
+        n._children = n.children;
+        n.children = null;
       }
     });
-    gen3Collapsed = !gen3Collapsed;
+
+    if (showGen3) {
+      // Expand all Gen‑3
+      root.descendants().forEach(n => {
+        if (n.depth === 1 && n._children) {
+          n.children = n._children;
+          n._children = null;
+        }
+      });
+      d3.select('#btnToggleGen3').text('Show Gen‑2');
+    } else {
+      // Collapse all Gen‑3
+      root.descendants().forEach(n => {
+        if (n.depth === 1 && n.children) {
+          n._children = n.children;
+          n.children = null;
+        }
+      });
+      d3.select('#btnToggleGen3').text('Show Gen‑3');
+    }
+
     update();
   });
 
