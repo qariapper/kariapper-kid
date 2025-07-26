@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--bb</h1>
+  <h1>Kariapper Family Tree--cc</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -126,7 +126,7 @@
     });
   });
 
-  // Assign spouse group number to children using father/mother name matching
+  // Assign spouse group number to children using father/mother name matching with partial label patterns
   flat.forEach(parent => {
     const spouseNames = parent.spouse?.split(',').map(s => s.trim()) || [];
     if (!spouseNames.length) return;
@@ -138,8 +138,21 @@
           : child.fatherName;
 
         const normOtherParent = normalize(otherParentName);
-        const groupNum = spouseNames.findIndex(name => normalize(name) === normOtherParent);
-        if (groupNum >= 0) child.spouseGroupNum = groupNum + 1;
+        let matched = false;
+
+        spouseNames.forEach((entry, i) => {
+          const tagMatch = entry.match(/(\d+(st|nd|rd|th)) wife/i);
+          if (tagMatch && normalize(tagMatch[0]) === normOtherParent) {
+            child.spouseGroupNum = i + 1;
+            matched = true;
+          }
+        });
+
+        // fallback: try whole-string match
+        if (!matched) {
+          const groupNum = spouseNames.findIndex(name => normalize(name) === normOtherParent);
+          if (groupNum >= 0) child.spouseGroupNum = groupNum + 1;
+        }
       }
     });
   });
