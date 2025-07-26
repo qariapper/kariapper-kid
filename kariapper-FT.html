@@ -81,6 +81,8 @@
   btnZoomOut.on('click',()=>svg.transition().call(zoom.scaleBy,0.8));
   btnReset  .on('click',()=>svg.transition().call(zoom.transform,d3.zoomIdentity));
 
+  const fatherNameIdx = col('father name');
+  const motherNameIdx = col('mother name');
   const flat = rows.map(r => {
     const get = i => (i >= 0 && r.c[i]) ? r.c[i].v : '';
     const id = get(idIdx);
@@ -96,7 +98,9 @@
       comments: get(commentsIdx),
       spouse_dIDs: get(spouseLinksIdx).split(',').map(s => s.trim()).filter(Boolean),
       parent: id.includes('.') ? id.replace(/\.[^.]+$/, '') : '',
-      children: []
+      children: [],
+      fatherName: get(fatherNameIdx),
+      motherName: get(motherNameIdx)
     };
   }).filter(d => d.id && d.name);
 
@@ -114,6 +118,23 @@
         child.comments && child.comments.includes(spID)
       );
       children.forEach(c => c.spouseGroupNum = groupNum);
+    });
+  });
+
+  // Assign spouse group number to children using father/mother name matching
+  flat.forEach(parent => {
+    const spouseNames = parent.spouse?.split(',').map(s => s.trim().toLowerCase()) || [];
+    if (!spouseNames.length) return;
+
+    flat.forEach(child => {
+      if (child.parent === parent.id) {
+        const otherParentName = parent.gender === 'm'
+          ? child.motherName?.toLowerCase()
+          : child.fatherName?.toLowerCase();
+
+        const groupNum = spouseNames.findIndex(name => name === otherParentName);
+        if (groupNum >= 0) child.spouseGroupNum = groupNum + 1;
+      }
     });
   });
 
