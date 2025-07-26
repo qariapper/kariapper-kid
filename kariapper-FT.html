@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--ee</h1>
+  <h1>Kariapper Family Tree--x</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -182,6 +182,8 @@
   svg.call(zoom);
 
   const tooltip = g.append('text').attr('class','tooltip').style('display','none');
+  // Second tooltip for parent node
+  const tooltipParent = g.append('text').attr('class','tooltip').style('display','none');
 
   const nodeLabel = d => {
     const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
@@ -342,6 +344,31 @@
       });
       const t = d.data.spouse?.trim() ? `Spouse(s): ${d.data.spouse}` : d.data.comments;
       if (t) tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+
+      // Show parent tooltip if: has parent, has spouseGroupNum, and parent has >1 spouse
+      if (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(',')) {
+        const parent = byId[d.data.parent];
+        const spouseList = parent.spouse?.split(',').map(s => s.trim());
+        const groupLabel = spouseList?.[d.data.spouseGroupNum - 1];
+        if (groupLabel) {
+          tooltipParent
+            .html(null)
+            .append('tspan')
+            .text('From: ')
+            .append('tspan')
+            .text(`${d.data.spouseGroupNum}\u2011${groupLabel}`) // \u2011 = non-breaking hyphen
+            .attr('fill', 'gold')
+            .attr('font-weight', 'bold');
+
+          const parentNode = root.descendants().find(n => n.data.id === parent.id);
+          if (parentNode) {
+            tooltipParent
+              .attr('x', parentNode.y + leftStub + 5)
+              .attr('y', parentNode.x - 18)
+              .style('display', 'block');
+          }
+        }
+      }
     }).on('mouseout', function(_, d){
       const ids = new Set([d.data.id, ...(marriageMap[d.data.id] || [])]);
       ids.forEach(id => {
@@ -349,6 +376,7 @@
         if (n) n.group.classed('hover-linked', false);
       });
       tooltip.style('display', 'none');
+      tooltipParent.style('display', 'none');
     });
   };
 
