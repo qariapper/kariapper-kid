@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--cc</h1>
+  <h1>Kariapper Family Tree--dd</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -81,8 +81,8 @@
   btnZoomOut.on('click',()=>svg.transition().call(zoom.scaleBy,0.8));
   btnReset  .on('click',()=>svg.transition().call(zoom.transform,d3.zoomIdentity));
 
-  const fatherNameIdx = col('father name');
-  const motherNameIdx = col('mother name');
+  const fatherNameIdx = col("father's name");
+  const motherNameIdx = col("mother's name");
   const flat = rows.map(r => {
     const get = i => (i >= 0 && r.c[i]) ? r.c[i].v : '';
     const id = get(idIdx);
