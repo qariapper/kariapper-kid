@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +9,26 @@
     body { margin: 0; font-family: "Segoe UI", sans-serif; }
     h1 { text-align: center; margin: 12px 0; }
     #controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+
+    #controls button {
+      font-size: 16px;
+      padding: 8px 12px;
+      min-height: 40px;
+    }
+    @media (max-width: 600px) {
+      .node-text {
+        font-size: 13px;
+      }
+      #controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      #controls button {
+        width: 90%;
+        max-width: 300px;
+        margin-bottom: 5px;
+      }
+    }
     #tree_div { width: 100%; height: calc(100vh - 110px); overflow: auto; }
 
     .trunk, .branch { fill: none; stroke: #888; stroke-width: 1.5px; stroke-linecap: round; }
@@ -39,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--b</h1>
+  <h1>Kariapper Family Tree-m</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -343,7 +362,14 @@
         if (n) n.group.classed('hover-linked', true);
       });
       const t = d.data.spouse?.trim() ? `Spouse(s): ${d.data.spouse}` : d.data.comments;
-      if (t) tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+      if (t) {
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+          // On touch devices, show a temporary text near the node or use alert as fallback
+          tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+        } else {
+          tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+        }
+      }
 
       // Show parent tooltip if: has parent, has spouseGroupNum, and parent has >1 spouse
       if (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(',')) {
