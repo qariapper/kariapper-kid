@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--a</h1>
+  <h1>Kariapper Family Tree--bb</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -107,6 +107,11 @@
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
+  // Helper function for normalizing names
+  function normalize(name) {
+    return name?.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
   // Assign spouse group number to children
   flat.forEach(parent => {
     if (!parent.spouse_dIDs.length) return;
@@ -123,16 +128,17 @@
 
   // Assign spouse group number to children using father/mother name matching
   flat.forEach(parent => {
-    const spouseNames = parent.spouse?.split(',').map(s => s.trim().toLowerCase()) || [];
+    const spouseNames = parent.spouse?.split(',').map(s => s.trim()) || [];
     if (!spouseNames.length) return;
 
     flat.forEach(child => {
       if (child.parent === parent.id) {
         const otherParentName = parent.gender === 'm'
-          ? child.motherName?.toLowerCase()
-          : child.fatherName?.toLowerCase();
+          ? child.motherName
+          : child.fatherName;
 
-        const groupNum = spouseNames.findIndex(name => name === otherParentName);
+        const normOtherParent = normalize(otherParentName);
+        const groupNum = spouseNames.findIndex(name => normalize(name) === normOtherParent);
         if (groupNum >= 0) child.spouseGroupNum = groupNum + 1;
       }
     });
