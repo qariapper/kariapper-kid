@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--x</h1>
+  <h1>Kariapper Family Tree--y</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -357,7 +357,7 @@
             .text('From: ')
             .append('tspan')
             .text(`${d.data.spouseGroupNum}\u2011${groupLabel}`) // \u2011 = non-breaking hyphen
-            .attr('fill', 'gold')
+            .attr('fill', 'red')
             .attr('font-weight', 'bold');
 
           const parentNode = root.descendants().find(n => n.data.id === parent.id);
