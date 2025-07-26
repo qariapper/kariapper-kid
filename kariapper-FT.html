@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-m</h1>
+  <h1>Kariapper Family Tree-x</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -93,6 +93,7 @@
   const dodIdx = 12;
   const spouseLinksIdx = col('validspouselinks');
   const commentsIdx = col('comments');
+  const secondaryIdIdx = col('secondary-dID');
   const btnZoomIn  = d3.select('#btnZoomIn');
   const btnZoomOut = d3.select('#btnZoomOut');
   const btnReset   = d3.select('#btnReset');
@@ -102,10 +103,11 @@
 
   const fatherNameIdx = col("father's name");
   const motherNameIdx = col("mother's name");
-  const flat = rows.map(r => {
-    const get = i => (i >= 0 && r.c[i]) ? r.c[i].v : '';
+  const flat = rows.map((r, i) => {
+    const get = i2 => (i2 >= 0 && r.c[i2]) ? r.c[i2].v : '';
     const id = get(idIdx);
     return {
+      index: i, // ADD this line to track row index
       id,
       kid: get(kidIdx),
       ksid: get(ksidIdx),
@@ -125,6 +127,21 @@
 
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
+
+  // Handle secondary-dID cases (for dual-lineage children)
+  flat.forEach(d => {
+    const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
+      ? rows[d.index].c[secondaryIdIdx].v
+      : '';
+
+    if (secondaryId && secondaryId !== d.id) {
+      const clone = { ...d };
+      clone.id = secondaryId;
+      clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
+      clone.isSecondary = true;
+      flat.push(clone);
+    }
+  });
 
   // Helper function for normalizing names
   function normalize(name) {
