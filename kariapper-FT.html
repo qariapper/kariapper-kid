@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-x</h1>
+  <h1>Kariapper Family Tree-y</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -140,6 +140,14 @@
       clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
       clone.isSecondary = true;
       flat.push(clone);
+      byId[clone.id] = clone;
+
+      // Link the clone to its secondary parent
+      const secParent = clone.parent && byId[clone.parent];
+      if (secParent) {
+        secParent.children = secParent.children || [];
+        secParent.children.push(clone);
+      }
     }
   });
 
