@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree--dd</h1>
+  <h1>Kariapper Family Tree--ee</h1>
   <div id="controls">
     <button id="btnToggleGen3">Toggle Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -187,7 +187,9 @@
     const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
     const index = idxMode === 'KID' && d.data.kid ? d.data.kid :
                   idxMode === 'KSID' && d.data.ksid ? d.data.ksid : d.data.id;
-    const prefix = d.data.spouseGroupNum ? d.data.spouseGroupNum + '-' : '';
+    // Show prefix only if child's parent has more than one spouse
+    const prefix = (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(','))
+      ? d.data.spouseGroupNum + '-' : '';
     return { text: prefix + d.data.name + icon, idx: index };
   };
   const boxWidth = d => Math.max(80, (nodeLabel(d).text + ' ' + nodeLabel(d).idx).length * charW + 20);
