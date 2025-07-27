@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-rr</h1>
+  <h1>Kariapper Family Tree-ss</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -133,7 +133,14 @@
   const clones = [];
 
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
-  flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
+  flat.forEach(d => {
+    if (d.parent && byId[d.parent]) {
+      byId[d.parent].children = byId[d.parent].children || [];
+      if (!byId[d.parent].children.includes(d)) {
+        byId[d.parent].children.push(d);
+      }
+    }
+  });
 
   // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
