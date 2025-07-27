@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-xx</h1>
+  <h1>Kariapper Family Tree-yy</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -93,9 +93,9 @@
   const dodIdx = 12;
   const spouseLinksIdx = col('validspouselinks');
   const commentsIdx = col('comments');
-  const secondaryIdIdx   = col('secondary-dID');
-  const tertiaryIdIdx    = col('tertiarydID');
-  const quaternaryIdIdx  = col('quaternarydID');
+  const secondaryIdIdx   = cols.findIndex(h => h.trim() === 'secondary-dID');
+  const tertiaryIdIdx    = cols.findIndex(h => h.trim() === 'tertiarydID');
+  const quaternaryIdIdx  = cols.findIndex(h => h.trim() === 'quaternarydID');
   const btnZoomIn  = d3.select('#btnZoomIn');
   const btnZoomOut = d3.select('#btnZoomOut');
   const btnReset   = d3.select('#btnReset');
