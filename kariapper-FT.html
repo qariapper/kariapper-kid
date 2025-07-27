@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-ee</h1>
+  <h1>Kariapper Family Tree-ff</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -286,6 +286,10 @@
     if (d.depth >= initialOpenDepth && d.children) {
       d._children = d.children;
       d.children = null;
+    } else if (d.depth >= initialOpenDepth && d._children) {
+      // Allow collapsed clone nodes (like secondary/tertiary) to expand
+      d.children = d._children;
+      d._children = null;
     }
   });
 
