@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-zz</h1>
+  <h1>Kariapper Family Tree-qq</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -159,13 +159,10 @@
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
       const parentNode = flat.find(x => x.id === parentId);
 
-      // Corrected expectedParent logic for exact field linkage:
-      const expectedParent = flat.find(x =>
-        x.id === parentId &&
-        normalize(x.name) === normalize(d[sourceCol]) &&
-        (x[sourceField] === value)
-      );
-      if (!expectedParent) return;
+      // Corrected parent verification: Check ONLY that the parentNode's own id matches value
+      // and its name matches the relevant parent's name of the current person
+      const correctParentName = normalize(d[sourceCol]);
+      if (!parentNode || normalize(parentNode.name) !== correctParentName) return;
 
       const clone = { ...d };
       clone.id = value;
