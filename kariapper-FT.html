@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-z</h1>
+  <h1>Kariapper Family Tree-xx</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -139,19 +139,19 @@
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
     const sourceVariants = [
-      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', allowedSources: [d.motherName] },
-      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', allowedSources: [d.fatherName] },
-      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', allowedSources: [d.motherName] }
+      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' },
+      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'secondaryId' },
+      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'secondaryId' }
     ];
 
-    sourceVariants.forEach(({ key, value, sourceCol, allowedSources }) => {
+    sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
       if (!value || value === d.id || flat.some(x => x.id === value)) return;
 
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
       const parentNode = flat.find(x => x.id === parentId);
 
-      // Confirm lineage matches expected source
-      if (!parentNode || normalize(parentNode.name) !== normalize(d[sourceCol])) return;
+      // Confirm lineage matches expected source using dynamic field comparison
+      if (!parentNode || normalize(parentNode.name) !== normalize(d[sourceCol]) || parentNode[sourceField] !== parentId) return;
 
       const clone = { ...d };
       clone.id = value;
