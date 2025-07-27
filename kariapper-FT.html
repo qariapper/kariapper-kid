@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-cc</h1>
+  <h1>Kariapper Family Tree-ee</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -276,7 +276,11 @@
       hasChildren: !!(node.children && node.children.length),
     });
   });
-  let root = d3.hierarchy(rootData, d => d.children || d._children);
+  let root = d3.hierarchy(rootData, d => {
+    if (d.children && d.children.length) return d.children;
+    if (d._children && d._children.length) return d._children;
+    return null;
+  });
 
   root.descendants().forEach(d => {
     if (d.depth >= initialOpenDepth && d.children) {
