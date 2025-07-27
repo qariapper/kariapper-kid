@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-uu</h1>
+  <h1>Kariapper Family Tree-vv</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -268,8 +268,14 @@
     });
   });
 
-  let root = d3.hierarchy(rootData, d => d.children);
-  root.descendants().forEach(d => { if (d.depth >= initialOpenDepth && d.children) { d._children = d.children; d.children = null; } });
+  let root = d3.hierarchy(rootData, d => d.children || d._children);
+
+  root.descendants().forEach(d => {
+    if (d.depth >= initialOpenDepth && d.children) {
+      d._children = d.children;
+      d.children = null;
+    }
+  });
 
   const svg = d3.select('#tree_div').html('').append('svg').attr('preserveAspectRatio','xMinYMin meet');
   const gZoom = svg.append('g');
