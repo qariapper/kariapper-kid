@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-b</h1>
+  <h1>Kariapper Family Tree-c</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -161,7 +161,7 @@
       }
     }
   });
-
+  root = d3.hierarchy(rootData, d => d.children);
   // Helper function for normalizing names
   function normalize(name) {
     return name?.toLowerCase().replace(/\s+/g, ' ').trim();
@@ -227,7 +227,7 @@
     });
   });
 
-  const root = d3.hierarchy(rootData, d => d.children);
+  let root = d3.hierarchy(rootData, d => d.children);
   root.descendants().forEach(d => { if (d.depth >= initialOpenDepth && d.children) { d._children = d.children; d.children = null; } });
 
   const svg = d3.select('#tree_div').html('').append('svg').attr('preserveAspectRatio','xMinYMin meet');
