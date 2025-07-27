@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-qq</h1>
+  <h1>Kariapper Family Tree-rr</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -145,7 +145,7 @@
   // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
-    // Assign sourceVariants with corrected logic
+    // Replace sourceVariants assignment with new block
     const sourceVariants = [
       { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' },
       { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'secondaryId' },
@@ -159,12 +159,12 @@
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
       const parentNode = flat.find(x => x.id === parentId);
 
-      // Corrected parent verification: Check ONLY that the parentNode's own id matches value
-      // and its name matches the relevant parent's name of the current person
       const correctParentName = normalize(d[sourceCol]);
       if (!parentNode || normalize(parentNode.name) !== correctParentName) return;
 
       const clone = { ...d };
+      // Insert check to prevent duplicate clones with same id already in use
+      if (byId[value]) return;  // prevent duplicate clones with same id already in use
       clone.id = value;
       clone.parent = parentId;
       clone.isSecondary = true;
@@ -173,25 +173,27 @@
     });
   });
   flat.push(...clones);
+  // After pushing clones, update byId map with new clones
+  clones.forEach(clone => {
+    byId[clone.id] = clone;
+  });
   clones.forEach(clone => {
     console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
 
-    byId[clone.id] = clone;
     const secParentId = clone.parent;
     const secParent = byId[secParentId];
 
-    if (!secParent) {
-      console.warn('⚠️ Secondary parent not found for', clone.id);
+    // Replace secParent check block as specified
+    if (!secParent || !secParent.children) {
+      console.warn('⚠️ Secondary parent not found or has no children for', clone.id);
+      return;
+    }
+    const exists = secParent.children.some(c => c.id === clone.id);
+    if (exists) {
+      console.log('⛔ Clone already exists under parent:', secParentId);
     } else {
-      secParent.children = secParent.children || [];
-
-      const exists = secParent.children.some(c => c.id === clone.id);
-      if (exists) {
-        console.log('⛔ Clone already exists under parent:', secParentId);
-      } else {
-        console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
-        secParent.children.push(clone);
-      }
+      console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
+      secParent.children.push(clone);
     }
   });
 
