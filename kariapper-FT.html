@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-tt</h1>
+  <h1>Kariapper Family Tree-aa</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -157,7 +157,7 @@
       if (!value || value === d.id) return;
 
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
-      const parentNode = flat.find(x => x.id === parentId);
+      const parentNode = byId[parentId];  // include clones as possible parents
 
       const correctParentName = normalize(d[sourceCol]);
       if (!parentNode || normalize(parentNode.name) !== correctParentName) return;
