@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-vv</h1>
+  <h1>Kariapper Family Tree-xx</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -268,6 +268,17 @@
     });
   });
 
+  // Diagnostic block: Inspect clone nodes before hierarchy build
+  console.log('📊 Inspecting clone nodes before hierarchy build:');
+  ['ALK.1.5.1', 'ALK.6.8'].forEach(id => {
+    const node = flat.find(d => d.id === id);
+    if (!node) return console.warn(`❌ ${id} not found in flat list`);
+    console.log(`🔍 ${id}:`, {
+      parent: node.parent,
+      children: node.children?.map(c => c.id),
+      hasChildren: !!(node.children && node.children.length),
+    });
+  });
   let root = d3.hierarchy(rootData, d => d.children || d._children);
 
   root.descendants().forEach(d => {
