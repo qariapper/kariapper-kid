@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-e</h1>
+  <h1>Kariapper Family Tree-f</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -131,16 +131,18 @@
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
   // Handle secondary-dID cases (for dual-lineage children)
+  console.log('📂 Checking for secondary-dID at index', secondaryIdIdx);
   flat.forEach(d => {
     const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
       ? rows[d.index].c[secondaryIdIdx].v
       : '';
-
+    console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
     if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
       const clone = { ...d };
       clone.id = secondaryId;
       clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
       clone.isSecondary = true;
+      console.log('📎 Clone created:', clone.id, 'based on', d.id);
       clones.push(clone);
     }
   });
@@ -161,7 +163,7 @@
       if (exists) {
         console.log('⛔ Clone already exists under parent:', secParentId);
       } else {
-        console.log('✅ Adding clone under parent:', secParentId);
+        console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
         secParent.children.push(clone);
       }
     }
