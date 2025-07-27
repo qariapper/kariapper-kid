@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-xx</h1>
+  <h1>Kariapper Family Tree-yy</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -138,6 +138,7 @@
   // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
+    // Assign sourceVariants with correct source columns
     const sourceVariants = [
       { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' },
       { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'secondaryId' },
@@ -145,13 +146,15 @@
     ];
 
     sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
-      if (!value || value === d.id || flat.some(x => x.id === value)) return;
+      // Only skip if value is empty or same as d.id (allow clones with same id in flat)
+      if (!value || value === d.id) return;
 
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
       const parentNode = flat.find(x => x.id === parentId);
 
-      // Confirm lineage matches expected source using dynamic field comparison
-      if (!parentNode || normalize(parentNode.name) !== normalize(d[sourceCol]) || parentNode[sourceField] !== parentId) return;
+      // Insert: check for expected parent (matching both id and name, and sourceField)
+      const expectedParent = flat.find(x => x.id === parentId && normalize(x.name) === normalize(d[sourceCol]));
+      if (!expectedParent || expectedParent[sourceField] !== parentId) return;
 
       const clone = { ...d };
       clone.id = value;
