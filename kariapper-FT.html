@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-h</h1>
+  <h1>Kariapper Family Tree-x</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -94,6 +94,8 @@
   const spouseLinksIdx = col('validspouselinks');
   const commentsIdx = col('comments');
   const secondaryIdIdx = cols.findIndex(h => h.trim().toLowerCase() === 'secondary-did');
+  const tertiaryIdIdx = cols.findIndex(h => h.trim().toLowerCase() === 'tertiarydid');
+  const quaternaryIdIdx = cols.findIndex(h => h.trim().toLowerCase() === 'quaternarydid');
   const btnZoomIn  = d3.select('#btnZoomIn');
   const btnZoomOut = d3.select('#btnZoomOut');
   const btnReset   = d3.select('#btnReset');
@@ -121,7 +123,10 @@
       parent: id.includes('.') ? id.replace(/\.[^.]+$/, '') : '',
       children: [],
       fatherName: get(fatherNameIdx),
-      motherName: get(motherNameIdx)
+      motherName: get(motherNameIdx),
+      secondaryId: get(secondaryIdIdx),
+      tertiaryId: get(tertiaryIdIdx),
+      quaternaryId: get(quaternaryIdIdx)
     };
   }).filter(d => d.id && d.name);
 
@@ -130,21 +135,24 @@
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
-  // Handle secondary-dID cases (for dual-lineage children)
-  console.log('📂 Checking for secondary-dID at index', secondaryIdIdx);
+  // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
+  console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
-    const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
-      ? rows[d.index].c[secondaryIdIdx].v
-      : '';
-    console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
-    if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
-      const clone = { ...d };
-      clone.id = secondaryId;
-      clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
-      clone.isSecondary = true;
-      console.log('📎 Clone created:', clone.id, 'based on', d.id);
-      clones.push(clone);
-    }
+    const idVariants = [
+      { col: 'secondaryId', source: d.secondaryId },
+      { col: 'tertiaryId', source: d.tertiaryId },
+      { col: 'quaternaryId', source: d.quaternaryId }
+    ];
+    idVariants.forEach(({ col, source }) => {
+      if (source && source !== d.id && !flat.some(x => x.id === source)) {
+        const clone = { ...d };
+        clone.id = source;
+        clone.parent = source.includes('.') ? source.replace(/\.[^.]+$/, '') : '';
+        clone.isSecondary = true;
+        console.log(`📎 Clone created (${col}):`, clone.id, 'based on', d.id);
+        clones.push(clone);
+      }
+    });
   });
   flat.push(...clones);
   clones.forEach(clone => {
