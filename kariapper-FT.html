@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-cc</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -147,9 +147,9 @@
   flat.forEach(d => {
     // Prioritize quaternaryId before secondaryId in sourceVariants, and use correct sourceField
     const sourceVariants = [
-      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'id' },
-      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'id' },
-      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' }
+      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'motherName' },
+      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'fatherName' },
+      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'motherName' }
     ];
 
     sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
@@ -160,7 +160,8 @@
       const parentNode = byId[parentId];  // include clones as possible parents
 
       const correctParentName = normalize(d[sourceCol]);
-      if (!parentNode || normalize(parentNode.name) !== correctParentName) return;
+      // Additional validation: parentNode must have correct parental name in the relevant field
+      if (!parentNode || normalize(parentNode[sourceField]) !== correctParentName) return;
 
       const clone = { ...d };
       // Allow clone ID reuse but avoid infinite loops: only skip if another node (not d) already has this id
