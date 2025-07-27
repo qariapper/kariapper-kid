@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-aa</h1>
+  <h1>Kariapper Family Tree-bb</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -163,8 +163,9 @@
       if (!parentNode || normalize(parentNode.name) !== correctParentName) return;
 
       const clone = { ...d };
-      // Insert check to prevent duplicate clones with same id already in use
-      if (byId[value]) return;  // prevent duplicate clones with same id already in use
+      // Allow clone ID reuse but avoid infinite loops: only skip if another node (not d) already has this id
+      const existing = flat.find(n => n.id === value && n !== d);
+      if (existing) return;
       clone.id = value;
       clone.parent = parentId;
       clone.isSecondary = true;
