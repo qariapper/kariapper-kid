@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-rr</h1>
+  <h1>Kariapper Family Tree-ss</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -145,11 +145,11 @@
   // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
-    // Replace sourceVariants assignment with new block
+    // Prioritize quaternaryId before secondaryId in sourceVariants
     const sourceVariants = [
-      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' },
+      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'secondaryId' },
       { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'secondaryId' },
-      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'secondaryId' }
+      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' }
     ];
 
     sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
