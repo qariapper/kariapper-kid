@@ -32,7 +32,7 @@
     #tree_div { width: 100%; height: calc(100vh - 110px); overflow: auto; }
 
     .trunk, .branch { fill: none; stroke: #888; stroke-width: 1.5px; stroke-linecap: round; }
-    .node-rect { rx: 4; ry: 4; filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
+    .node-rect { filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
     .deceased { stroke: green !important; }
     /* Tooltip glow + animation */
     .married-text { font-weight: bold; filter: drop-shadow(0 0 2px gold); }
@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-g</h1>
+  <h1>Kariapper Family Tree-h</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -297,9 +297,6 @@
       .attr('y', -12)
       .attr('width', w)
       .attr('height', 24)
-      .attr('rx', 4)
-      .attr('ry', 4)
-      //.attr('stroke', '#888')
       .attr('stroke-width', 2)
       .attr('fill', d.data.gender === 'f' ? '#fbd3e0' :
                     d.data.gender === 'm' ? '#d0e4f7' : '#eee')
@@ -307,7 +304,9 @@
         let cls = 'node-rect';
         if (d.data.dod) cls += ' deceased';
         return cls;
-      });
+      })
+      .attr('rx', 4)
+      .attr('ry', 4);
 
     // Generation overlay (optional, layered on top)
     const genOverlay = d.data.gen === 1 ? '#eceff4'
@@ -316,15 +315,16 @@
                     : '';
     if (genOverlay) {
       sel.append('rect')
+      sel.append('rect')
         .attr('class', 'gen-overlay')
         .attr('x', 0)
         .attr('y', -12)
         .attr('width', w)
         .attr('height', 24)
-        .attr('rx', 4)
-        .attr('ry', 4)
         .attr('fill', genOverlay)
-        .lower();
+        .lower()
+        .attr('rx', 4)
+        .attr('ry', 4);
     }
 
     // Append texts fresh
@@ -339,7 +339,7 @@
       .attr('x', 10 + lab.text.length * charW)
       .attr('y', 0)
       .text(lab.idx ? ' ' + lab.idx : '');
-  }); 
+  });
 
 
     const nodeById = {};
