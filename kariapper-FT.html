@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-zz</h1>
+  <h1>Kariapper Family Tree-qq</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -152,9 +152,13 @@
       const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
       const parentNode = flat.find(x => x.id === parentId);
 
-      // Insert: check for expected parent (matching both id and name, and sourceField)
-      const expectedParent = flat.find(x => x.id === parentId && normalize(x.name) === normalize(d[sourceCol]));
-      if (!expectedParent || expectedParent[sourceField] !== parentId) return;
+      // Updated logic for expectedParent:
+      const expectedParent = flat.find(x =>
+        x.id === parentId &&
+        normalize(x.name) === normalize(d[sourceCol]) &&
+        (!x[sourceField] || x[sourceField] === parentId)
+      );
+      if (!expectedParent) return;
 
       const clone = { ...d };
       clone.id = value;
