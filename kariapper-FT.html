@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-x</h1>
+  <h1>Kariapper Family Tree-y</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -138,20 +138,27 @@
   // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
   console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
   flat.forEach(d => {
-    const idVariants = [
-      { col: 'secondaryId', source: d.secondaryId },
-      { col: 'tertiaryId', source: d.tertiaryId },
-      { col: 'quaternaryId', source: d.quaternaryId }
+    const sourceVariants = [
+      { key: 'secondaryId', value: d.secondaryId, allowedSources: [d.motherName] },
+      { key: 'tertiaryId', value: d.tertiaryId, allowedSources: [d.fatherName] },
+      { key: 'quaternaryId', value: d.quaternaryId, allowedSources: [d.motherName] }
     ];
-    idVariants.forEach(({ col, source }) => {
-      if (source && source !== d.id && !flat.some(x => x.id === source)) {
-        const clone = { ...d };
-        clone.id = source;
-        clone.parent = source.includes('.') ? source.replace(/\.[^.]+$/, '') : '';
-        clone.isSecondary = true;
-        console.log(`📎 Clone created (${col}):`, clone.id, 'based on', d.id);
-        clones.push(clone);
-      }
+
+    sourceVariants.forEach(({ key, value, allowedSources }) => {
+      if (!value || value === d.id || flat.some(x => x.id === value)) return;
+
+      const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
+      const parentNode = flat.find(x => x.id === parentId);
+
+      // Confirm lineage matches expected source
+      if (!parentNode || !allowedSources.includes(parentNode.name)) return;
+
+      const clone = { ...d };
+      clone.id = value;
+      clone.parent = parentId;
+      clone.isSecondary = true;
+      console.log(`📎 Clone created (${key}):`, clone.id, 'based on', d.id);
+      clones.push(clone);
     });
   });
   flat.push(...clones);
