@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-tt</h1>
+  <h1>Kariapper Family Tree-uu</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -149,7 +149,7 @@
     const sourceVariants = [
       { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'id' },
       { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'secondaryId' },
-      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'quaternaryId' }
+      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'secondaryId' }
     ];
 
     sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
