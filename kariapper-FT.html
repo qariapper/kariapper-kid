@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-a</h1>
+  <h1>Kariapper Family Tree-b</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -148,16 +148,17 @@
   clones.forEach(clone => {
     byId[clone.id] = clone;
 
-    // Also ensure the parent hierarchy includes this child
-    const secParent = clone.parent && byId[clone.parent];
+    // Find and attach to correct parent
+    const secParentId = clone.parent;
+    const secParent = byId[secParentId];
     if (secParent) {
       secParent.children = secParent.children || [];
-      secParent.children.push(clone);
 
-      // If secParent is already in root tree, rebind hierarchy
-      const parentNode = d3.hierarchy(secParent, d => d.children);
-      const secChildNode = d3.hierarchy(clone, d => d.children);
-      secParent.children.push(clone);
+      // Prevent duplicate if already present
+      const exists = secParent.children.some(c => c.id === clone.id);
+      if (!exists) {
+        secParent.children.push(clone);
+      }
     }
   });
 
