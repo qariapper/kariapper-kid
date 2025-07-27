@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-c</h1>
+  <h1>Kariapper Family Tree-d</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -161,7 +161,8 @@
       }
     }
   });
-  root = d3.hierarchy(rootData, d => d.children);
+
+
   // Helper function for normalizing names
   function normalize(name) {
     return name?.toLowerCase().replace(/\s+/g, ' ').trim();
