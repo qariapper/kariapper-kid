@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-l</h1>
+  <h1>Kariapper Family Tree-log</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -148,9 +148,15 @@
     flat.forEach(d => {
       const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
       // Avoid duplicates (flat or clones)
-      if (!altId || altId === d.id) return;
+      if (!altId || altId === d.id) {
+        console.log(`⛔ Skipped [${label}] for ${d.id} — empty or self-reference`);
+        return;
+      }
       // Skip creating a clone if altId already exists in flat
-      if (flat.some(x => x.id === altId)) return;
+      if (flat.some(x => x.id === altId)) {
+        console.log(`⛔ Skipped [${label}] for ${d.id} — altId ${altId} already exists in flat`);
+        return;
+      }
       // Remove existing clones of this id from other parents (e.g., wrong lineage)
       const existingCloneIndex = clones.findIndex(c => c.id === altId);
       if (existingCloneIndex !== -1) clones.splice(existingCloneIndex, 1);
@@ -160,7 +166,7 @@
       clone.parent = altId.includes('.') ? altId.replace(/\.[^.]+$/, '') : '';
       clone[label] = true;
 
-      console.log(`📎 Clone created (${label}):`, clone.id, 'based on', d.id);
+      console.log(`📎 Clone created [${label}] — altId: ${altId}, based on original id: ${d.id}, new parent: ${clone.parent}, row index: ${d.index}, name: ${d.name}`);
       clones.push(clone);
     });
   });
