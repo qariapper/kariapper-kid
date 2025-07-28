@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-log</h1>
+  <h1>Kariapper Family Tree-x</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -125,8 +125,6 @@
     };
   }).filter(d => d.id && d.name);
 
-  const clones = [];
-
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
@@ -142,55 +140,42 @@
     idx: colMap[col.toLowerCase()]
   }));
 
-  cloneTypes.forEach(({ label, idx }) => {
-    if (idx === undefined || idx < 0) return;
-
-    flat.forEach(d => {
-      const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
-      // Avoid duplicates (flat or clones)
-      if (!altId || altId === d.id) {
-        console.log(`⛔ Skipped [${label}] for ${d.id} — empty or self-reference`);
-        return;
-      }
-      // Skip creating a clone if altId already exists in flat
-      if (flat.some(x => x.id === altId)) {
-        console.log(`⛔ Skipped [${label}] for ${d.id} — altId ${altId} already exists in flat`);
-        return;
-      }
-      // Remove existing clones of this id from other parents (e.g., wrong lineage)
-      const existingCloneIndex = clones.findIndex(c => c.id === altId);
-      if (existingCloneIndex !== -1) clones.splice(existingCloneIndex, 1);
-
-      const clone = { ...d };
-      clone.id = altId;
-      clone.parent = altId.includes('.') ? altId.replace(/\.[^.]+$/, '') : '';
-      clone[label] = true;
-
-      console.log(`📎 Clone created [${label}] — altId: ${altId}, based on original id: ${d.id}, new parent: ${clone.parent}, row index: ${d.index}, name: ${d.name}`);
-      clones.push(clone);
-    });
-  });
-  flat.push(...clones);
-  clones.forEach(clone => {
-    console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
-
-    byId[clone.id] = clone;
-    const parentId = clone.parent;
+  // Use a helper to deep clone and attach, preventing duplicates
+  function cloneAndAttach(origId, altId, parentId, label) {
+    if (!altId || altId === origId) return;
+    if (altId in byId) return; // skip if already created
+    // Deep clone object
+    const clone = JSON.parse(JSON.stringify(byId[origId]));
+    clone.id = altId;
+    clone.parent = parentId;
+    clone[label] = true;
+    clone.children = []; // Children will be reattached as needed by D3
+    byId[altId] = clone;
+    flat.push(clone);
+    // Attach to new parent if not already present
     const parent = byId[parentId];
-
-    if (!parent) {
-      console.warn('⚠️ Clone parent not found for', clone.id);
-    } else {
+    if (parent) {
       parent.children = parent.children || [];
-      // Stricter check: only append if not already present (by id and not the same object)
-      const exists = parent.children.some(c => c.id === clone.id && c !== clone);
-      if (exists) {
-        console.log('⛔ Clone already exists under parent:', parentId);
-      } else {
-        console.log('✅ Appending clone', clone.id, 'under parent', parentId);
+      if (!parent.children.some(c => c.id === altId)) {
         parent.children.push(clone);
       }
+    } else {
+      console.warn('⚠️ Clone parent not found for', altId);
     }
+  }
+
+  cloneTypes.forEach(({ label, idx }) => {
+    if (idx === undefined || idx < 0) return;
+    flat.slice().forEach(d => {
+      const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
+      if (!altId || altId === d.id) {
+        //console.log(`⛔ Skipped [${label}] for ${d.id} — empty or self-reference`);
+        return;
+      }
+      // Compute new parent for altId
+      const parentId = altId.includes('.') ? altId.replace(/\.[^.]+$/, '') : '';
+      cloneAndAttach(d.id, altId, parentId, label);
+    });
   });
 
 
