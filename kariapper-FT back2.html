@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-cc</h1>
+  <h1>Kariapper Family Tree-ff</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -143,31 +143,31 @@
   // Use a helper to deep clone and attach, preventing duplicates
   function cloneAndAttach(origId, altId, parentId, label) {
     if (!altId || altId === origId) return;
-    if (altId in byId) return; // skip if already created
-    // Deep clone object
+    if (altId in byId) return;
+
+    const altRowIndex = rows.findIndex(r => r.c && r.c[idIdx]?.v === altId);
+    if (altRowIndex === -1) return;
+
+    const r = rows[altRowIndex];
+
     const clone = JSON.parse(JSON.stringify(byId[origId]));
     clone.id = altId;
     clone.parent = parentId;
     clone[label] = true;
-    // Recompute KID and KSID from altId by looking up matching row
-    const altRow2 = rows.find((r, idx) => r.c && r.c[idIdx]?.v === altId);
-    if (altRow2) {
-      clone.kid = altRow2.c?.[kidIdx]?.v || '';
-      clone.ksid = altRow2.c?.[ksidIdx]?.v || '';
-      clone.index = rows.indexOf(altRow2);
-    }
-    clone.children = []; // Children will be reattached as needed by D3
+    clone.index = altRowIndex; // update to reflect actual row
+    clone.kid = r.c?.[kidIdx]?.v || '';
+    clone.ksid = r.c?.[ksidIdx]?.v || '';
+    clone.children = [];
+
     byId[altId] = clone;
     flat.push(clone);
-    // Attach to new parent if not already present
+
     const parent = byId[parentId];
     if (parent) {
       parent.children = parent.children || [];
       if (!parent.children.some(c => c.id === altId)) {
         parent.children.push(clone);
       }
-    } else {
-      //console.warn('⚠️ Clone parent not found for', altId);
     }
   }
 
