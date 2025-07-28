@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-g</h1>
+  <h1>Kariapper Family Tree-h</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -130,41 +130,52 @@
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
   flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
 
-  // Handle secondary-dID cases (for dual-lineage children)
-  console.log('📂 Checking for secondary-dID at index', secondaryIdIdx);
-  flat.forEach(d => {
-    const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
-      ? rows[d.index].c[secondaryIdIdx].v
-      : '';
-    console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
-    if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
+  // Handle alternate lineage clones: secondary, tertiary, quaternary
+  const cloneColumns = [
+    { col: 'secondary-did', label: 'secondaryId' },
+    { col: 'tertiarydID', label: 'tertiaryId' },
+    { col: 'quaternarydID', label: 'quaternaryId' }
+  ];
+  const colMap = Object.fromEntries(cols.map((c, i) => [c.trim().toLowerCase(), i]));
+  const cloneTypes = cloneColumns.map(({ col, label }) => ({
+    label,
+    idx: colMap[col.toLowerCase()]
+  }));
+
+  cloneTypes.forEach(({ label, idx }) => {
+    if (idx === undefined || idx < 0) return;
+
+    flat.forEach(d => {
+      const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
+      if (!altId || altId === d.id || flat.some(x => x.id === altId)) return;
+
       const clone = { ...d };
-      clone.id = secondaryId;
-      clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
-      clone.isSecondary = true;
-      console.log('📎 Clone created:', clone.id, 'based on', d.id);
+      clone.id = altId;
+      clone.parent = altId.includes('.') ? altId.replace(/\.[^.]+$/, '') : '';
+      clone[label] = true;
+
+      console.log(`📎 Clone created (${label}):`, clone.id, 'based on', d.id);
       clones.push(clone);
-    }
+    });
   });
   flat.push(...clones);
   clones.forEach(clone => {
     console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
 
     byId[clone.id] = clone;
-    const secParentId = clone.parent;
-    const secParent = byId[secParentId];
+    const parentId = clone.parent;
+    const parent = byId[parentId];
 
-    if (!secParent) {
-      console.warn('⚠️ Secondary parent not found for', clone.id);
+    if (!parent) {
+      console.warn('⚠️ Clone parent not found for', clone.id);
     } else {
-      secParent.children = secParent.children || [];
-
-      const exists = secParent.children.some(c => c.id === clone.id);
+      parent.children = parent.children || [];
+      const exists = parent.children.some(c => c.id === clone.id);
       if (exists) {
-        console.log('⛔ Clone already exists under parent:', secParentId);
+        console.log('⛔ Clone already exists under parent:', parentId);
       } else {
-        console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
-        secParent.children.push(clone);
+        console.log('✅ Appending clone', clone.id, 'under parent', parentId);
+        parent.children.push(clone);
       }
     }
   });
