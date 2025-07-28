@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-j</h1>
+  <h1>Kariapper Family Tree-k</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -132,28 +132,29 @@
 
   // Handle secondary-dID cases (for dual-lineage children)
   console.log('📂 Checking for secondary-dID at index', secondaryIdIdx);
-  flat.forEach(d => {
-    const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
-      ? rows[d.index].c[secondaryIdIdx].v
-      : '';
-    console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
-    if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
-      const clone = { ...d };
-      // Retrieve all three variant IDs: secondaryId (AD, 29), tertiaryId (AN, 39), quaternaryId (AO, 40)
-      const row = rows[d.index] && rows[d.index].c;
-      const quaternaryId = row && row[40] ? row[40].v : '';
-      const tertiaryId   = row && row[39] ? row[39].v : '';
-      const secondaryCloneId = row && row[38] ? row[38].v : '';
-      // Use correct clone.id based on which variant this is
-      clone.id = (secondaryId === quaternaryId) ? quaternaryId :
-                 (secondaryId === tertiaryId)   ? tertiaryId   :
-                 secondaryCloneId || secondaryId;
-      clone.parent = clone.id.includes('.') ? clone.id.replace(/\.[^.]+$/, '') : '';
-      clone.isSecondary = true;
-      console.log('📎 Clone created:', clone.id, 'based on', d.id);
-      clones.push(clone);
-    }
-  });
+    flat.forEach(d => {
+      const secondaryId = (secondaryIdIdx >= 0 && rows[d.index] && rows[d.index].c[secondaryIdIdx])
+        ? rows[d.index].c[secondaryIdIdx].v
+        : '';
+      console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
+      if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
+        const clone = { ...d };
+        // Retrieve all three variant IDs: secondaryCloneId (AD, 38), tertiaryId (AN, 39), quaternaryId (AO, 40)
+        const row = rows[d.index] && rows[d.index].c;
+        const secondaryCloneId = row && row[38] ? row[38].v : '';
+        const tertiaryId   = row && row[39] ? row[39].v : '';
+        const quaternaryId = row && row[40] ? row[40].v : '';
+        // Use correct clone.id based on lineage route
+        const useId = secondaryId === tertiaryId ? tertiaryId :
+                      secondaryId === quaternaryId ? quaternaryId :
+                      secondaryCloneId || secondaryId;
+        clone.id = useId;
+        clone.parent = useId.includes('.') ? useId.replace(/\.[^.]+$/, '') : '';
+        clone.isSecondary = true;
+        console.log('📎 Clone created:', clone.id, 'based on', d.id);
+        clones.push(clone);
+      }
+    });
   flat.push(...clones);
   clones.forEach(clone => {
     console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
