@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-oo</h1>
+  <h1>Kariapper Family Tree-pp</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -326,7 +326,7 @@
     svg.attr('viewBox', [0, 0, Math.max(...ys)-Math.min(...ys)+M*2, Math.max(...xs)-Math.min(...xs)+M*2].join(' '));
     g.attr('transform', `translate(${M - Math.min(...ys)},${M - Math.min(...xs)})`);
 
-    const nodes = g.selectAll('g.node').data(root.descendants(), d => d.data.id)
+    const nodes = g.selectAll('g.node').data(root.descendants(), d => d.data.id + '-' + d.depth)
       .join(enter => {
         const n = enter.append('g').attr('class','node').on('click', (_,d) => toggleNode(d));
         n.append('rect');
