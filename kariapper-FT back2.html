@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-xx</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -149,13 +149,13 @@
     clone.id = altId;
     clone.parent = parentId;
     clone[label] = true;
-    // Recompute KID and KSID from altId by looking up matching row
+    // Recompute KID and KSID from altId
     const altRow2 = rows.find(r => r.c && r.c[idIdx]?.v === altId);
     if (altRow2) {
       clone.kid = altRow2.c?.[kidIdx]?.v || '';
       clone.ksid = altRow2.c?.[ksidIdx]?.v || '';
     } else {
-      // fallback: try direct lookup from row list in case d.index matches
+      // fallback if not found directly
       const altIndex = rows.findIndex(r => r?.c?.[idIdx]?.v === altId);
       if (altIndex >= 0) {
         clone.kid = rows[altIndex].c?.[kidIdx]?.v || '';
