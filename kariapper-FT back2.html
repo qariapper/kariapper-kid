@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-cc</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -159,8 +159,8 @@
         kid: altRow2?.c?.[kidIdx]?.v,
         ksid: altRow2?.c?.[ksidIdx]?.v
       });
-      clone.kid = altRow2.c?.[kidIdx]?.v || '';
-      clone.ksid = altRow2.c?.[ksidIdx]?.v || '';
+      clone.kid = altRow2.c?.[kidIdx] ? altRow2.c[kidIdx].v : '';
+      clone.ksid = altRow2.c?.[ksidIdx] ? altRow2.c[ksidIdx].v : '';
     }
     clone.parent = parentId;
     clone[label] = true;
