@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-pp</h1>
+  <h1>Kariapper Family Tree-qq</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -276,22 +276,7 @@
       hasChildren: !!(node.children && node.children.length),
     });
   });
-  let root = d3.hierarchy(rootData, d => {
-    if (d.children && d.children.length) return d.children;
-    if (d._children && d._children.length) return d._children;
-    return null;
-  });
-
-  root.descendants().forEach(d => {
-    if (d.depth >= initialOpenDepth && d.children) {
-      d._children = d.children;
-      d.children = null;
-    } else if (d.depth >= initialOpenDepth && d._children) {
-      // Allow collapsed clone nodes (like secondary/tertiary) to expand
-      d.children = d._children;
-      d._children = null;
-    }
-  });
+  let root = d3.hierarchy(rootData, d => d.children);
 
   const svg = d3.select('#tree_div').html('').append('svg').attr('preserveAspectRatio','xMinYMin meet');
   const gZoom = svg.append('g');
