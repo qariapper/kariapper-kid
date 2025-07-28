@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-h</h1>
+  <h1>Kariapper Family Tree-i</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -147,7 +147,8 @@
 
     flat.forEach(d => {
       const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
-      if (!altId || altId === d.id || flat.some(x => x.id === altId)) return;
+      // Avoid duplicates (flat or clones)
+      if (!altId || altId === d.id || flat.some(x => x.id === altId) || clones.some(c => c.id === altId)) return;
 
       const clone = { ...d };
       clone.id = altId;
