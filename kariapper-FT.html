@@ -32,7 +32,7 @@
     #tree_div { width: 100%; height: calc(100vh - 110px); overflow: auto; }
 
     .trunk, .branch { fill: none; stroke: #888; stroke-width: 1.5px; stroke-linecap: round; }
-    .node-rect { filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
+    .node-rect { rx: 4; ry: 4; filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
     .deceased { stroke: green !important; }
     /* Tooltip glow + animation */
     .married-text { font-weight: bold; filter: drop-shadow(0 0 2px gold); }
@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-qq</h1>
+  <h1>Kariapper Family Tree-y</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -93,9 +93,7 @@
   const dodIdx = 12;
   const spouseLinksIdx = col('validspouselinks');
   const commentsIdx = col('comments');
-  const secondaryIdIdx   = cols.findIndex(h => h.trim() === 'secondary-dID');
-  const tertiaryIdIdx    = cols.findIndex(h => h.trim() === 'tertiarydID');
-  const quaternaryIdIdx  = cols.findIndex(h => h.trim() === 'quaternarydID');
+  const secondaryIdIdx = cols.findIndex(h => h.trim().toLowerCase() === 'secondary-did');
   const btnZoomIn  = d3.select('#btnZoomIn');
   const btnZoomOut = d3.select('#btnZoomOut');
   const btnReset   = d3.select('#btnReset');
@@ -123,80 +121,61 @@
       parent: id.includes('.') ? id.replace(/\.[^.]+$/, '') : '',
       children: [],
       fatherName: get(fatherNameIdx),
-      motherName: get(motherNameIdx),
-      secondaryId: get(secondaryIdIdx),
-      tertiaryId: get(tertiaryIdIdx),
-      quaternaryId: get(quaternaryIdIdx)
+      motherName: get(motherNameIdx)
     };
   }).filter(d => d.id && d.name);
 
-  const clones = [];
-
   const byId = Object.fromEntries(flat.map(d => [d.id, d]));
-  flat.forEach(d => {
-    if (d.parent && byId[d.parent]) {
-      byId[d.parent].children = byId[d.parent].children || [];
-      if (!byId[d.parent].children.includes(d)) {
-        byId[d.parent].children.push(d);
+  flat.forEach(d => { if (d.parent && byId[d.parent]) byId[d.parent].children.push(d); });
+
+  // Handle alternate lineage clones: secondary, tertiary, quaternary
+  const cloneColumns = [
+    { col: 'secondary-did', label: 'secondaryId' },
+    { col: 'tertiarydID', label: 'tertiaryId' },
+    { col: 'quaternarydID', label: 'quaternaryId' }
+  ];
+  const colMap = Object.fromEntries(cols.map((c, i) => [c.trim().toLowerCase(), i]));
+  const cloneTypes = cloneColumns.map(({ col, label }) => ({
+    label,
+    idx: colMap[col.toLowerCase()]
+  }));
+
+  // Use a helper to deep clone and attach, preventing duplicates
+  function cloneAndAttach(origId, altId, parentId, label) {
+    if (!altId || altId === origId) return;
+    if (altId in byId) return; // skip if already created
+    // Deep clone object
+    const clone = JSON.parse(JSON.stringify(byId[origId]));
+    clone.id = altId;
+    clone.parent = parentId;
+    clone[label] = true;
+    clone.children = []; // Children will be reattached as needed by D3
+    byId[altId] = clone;
+    flat.push(clone);
+    // Attach to new parent if not already present
+    const parent = byId[parentId];
+    if (parent) {
+      parent.children = parent.children || [];
+      if (!parent.children.some(c => c.id === altId)) {
+        parent.children.push(clone);
       }
-    }
-  });
-
-  // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
-  console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
-  flat.forEach(d => {
-    // Prioritize quaternaryId before secondaryId in sourceVariants, and use correct sourceField
-    const sourceVariants = [
-      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'motherName' },
-      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'fatherName' },
-      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'motherName' }
-    ];
-
-    sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
-      // Only skip if value is empty or same as d.id (allow clones with same id in flat)
-      if (!value || value === d.id) return;
-
-      const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
-      const parentNode = byId[parentId];  // include clones as possible parents
-
-      const correctParentName = normalize(d[sourceCol]);
-      // Additional validation: parentNode must have correct parental name in the relevant field
-      if (!parentNode || normalize(parentNode[sourceField]) !== correctParentName) return;
-
-      const clone = { ...d };
-      // Allow clone ID reuse but avoid infinite loops: only skip if another node (not d) already has this id
-      const existing = flat.find(n => n.id === value && n !== d);
-      if (existing) return;
-      clone.id = value;
-      clone.parent = parentId;
-      clone.isSecondary = true;
-      console.log(`📎 Clone created (${key}):`, clone.id, 'based on', d.id);
-      clones.push(clone);
-    });
-  });
-  flat.push(...clones);
-  // After pushing clones, update byId map with new clones
-  clones.forEach(clone => {
-    byId[clone.id] = clone;
-  });
-  clones.forEach(clone => {
-    console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
-
-    const secParentId = clone.parent;
-    const secParent = byId[secParentId];
-
-    // Replace secParent check block as specified
-    if (!secParent || !secParent.children) {
-      console.warn('⚠️ Secondary parent not found or has no children for', clone.id);
-      return;
-    }
-    const exists = secParent.children.some(c => c.id === clone.id);
-    if (exists) {
-      console.log('⛔ Clone already exists under parent:', secParentId);
     } else {
-      console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
-      secParent.children.push(clone);
+      //console.warn('⚠️ Clone parent not found for', altId);
     }
+  }
+
+  cloneTypes.forEach(({ label, idx }) => {
+    if (idx === undefined || idx < 0) return;
+    flat.slice().forEach(d => {
+      const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
+      if (!altId || altId === d.id) {
+        //console.log(`⛔ Skipped [${label}] for ${d.id} — empty or self-reference`);
+        return;
+      }
+      // Compute new parent for altId
+      const parentId = altId.includes('.') ? altId.replace(/\.[^.]+$/, '') : '';
+      cloneAndAttach(d.id, altId, parentId, label);
+    });
   });
 
 
@@ -265,33 +244,8 @@
     });
   });
 
-  // Diagnostic block: Inspect clone nodes before hierarchy build
-  console.log('📊 Inspecting clone nodes before hierarchy build:');
-  ['ALK.1.5.1', 'ALK.6.8'].forEach(id => {
-    const node = flat.find(d => d.id === id);
-    if (!node) return console.warn(`❌ ${id} not found in flat list`);
-    console.log(`🔍 ${id}:`, {
-      parent: node.parent,
-      children: node.children?.map(c => c.id),
-      hasChildren: !!(node.children && node.children.length),
-    });
-  });
-  let root = d3.hierarchy(rootData, d => {
-    if (d.children && d.children.length) return d.children;
-    if (d._children && d._children.length) return d._children;
-    return null;
-  });
-
-  root.descendants().forEach(d => {
-    if (d.depth >= initialOpenDepth && d.children) {
-      d._children = d.children;
-      d.children = null;
-    } else if (d.depth >= initialOpenDepth && d._children) {
-      // Allow collapsed clone nodes (like secondary/tertiary) to expand
-      d.children = d._children;
-      d._children = null;
-    }
-  });
+  let root = d3.hierarchy(rootData, d => d.children);
+  root.descendants().forEach(d => { if (d.depth >= initialOpenDepth && d.children) { d._children = d.children; d.children = null; } });
 
   const svg = d3.select('#tree_div').html('').append('svg').attr('preserveAspectRatio','xMinYMin meet');
   const gZoom = svg.append('g');
@@ -326,7 +280,7 @@
     svg.attr('viewBox', [0, 0, Math.max(...ys)-Math.min(...ys)+M*2, Math.max(...xs)-Math.min(...xs)+M*2].join(' '));
     g.attr('transform', `translate(${M - Math.min(...ys)},${M - Math.min(...xs)})`);
 
-    const nodes = g.selectAll('g.node').data(root.descendants(), d => d.data.id + '-' + d.depth)
+    const nodes = g.selectAll('g.node').data(root.descendants(), d => d.data.id)
       .join(enter => {
         const n = enter.append('g').attr('class','node').on('click', (_,d) => toggleNode(d));
         n.append('rect');
@@ -352,6 +306,9 @@
       .attr('y', -12)
       .attr('width', w)
       .attr('height', 24)
+      .attr('rx', 4)
+      .attr('ry', 4)
+      //.attr('stroke', '#888')
       .attr('stroke-width', 2)
       .attr('fill', d.data.gender === 'f' ? '#fbd3e0' :
                     d.data.gender === 'm' ? '#d0e4f7' : '#eee')
@@ -359,9 +316,7 @@
         let cls = 'node-rect';
         if (d.data.dod) cls += ' deceased';
         return cls;
-      })
-      .attr('rx', 4)
-      .attr('ry', 4);
+      });
 
     // Generation overlay (optional, layered on top)
     const genOverlay = d.data.gen === 1 ? '#eceff4'
@@ -370,16 +325,15 @@
                     : '';
     if (genOverlay) {
       sel.append('rect')
-      sel.append('rect')
         .attr('class', 'gen-overlay')
         .attr('x', 0)
         .attr('y', -12)
         .attr('width', w)
         .attr('height', 24)
-        .attr('fill', genOverlay)
-        .lower()
         .attr('rx', 4)
-        .attr('ry', 4);
+        .attr('ry', 4)
+        .attr('fill', genOverlay)
+        .lower();
     }
 
     // Append texts fresh
@@ -394,7 +348,7 @@
       .attr('x', 10 + lab.text.length * charW)
       .attr('y', 0)
       .text(lab.idx ? ' ' + lab.idx : '');
-  });
+  }); 
 
 
     const nodeById = {};
