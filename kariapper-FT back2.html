@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-cc</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -150,10 +150,11 @@
     clone.parent = parentId;
     clone[label] = true;
     // Recompute KID and KSID from altId by looking up matching row
-    const altRow2 = rows.find(r => r.c && r.c[idIdx]?.v === altId);
+    const altRow2 = rows.find((r, idx) => r.c && r.c[idIdx]?.v === altId);
     if (altRow2) {
       clone.kid = altRow2.c?.[kidIdx]?.v || '';
       clone.ksid = altRow2.c?.[ksidIdx]?.v || '';
+      clone.index = rows.indexOf(altRow2);
     }
     clone.children = []; // Children will be reattached as needed by D3
     byId[altId] = clone;
