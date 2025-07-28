@@ -150,16 +150,17 @@
     // Properly lookup KID/KSID from the altId row
     const altRow2 = rows.find(r => r?.c?.[idIdx]?.v === altId);
     console.log('🔁 Cloning:', { altId, from: origId, altRow2 });
-    if (altRow2) {
+    if (!altRow2 || (!altRow2.c?.[kidIdx]?.v && !altRow2.c?.[ksidIdx]?.v)) {
+      console.warn('⚠️ Clone missing altRow2 or KID/KSID', { altId, from: origId });
+      clone.kid = '';
+      clone.ksid = '';
+    } else if (altRow2) {
       console.log('🔍 Found KID/KSID for clone:', {
         kid: altRow2?.c?.[kidIdx]?.v,
         ksid: altRow2?.c?.[ksidIdx]?.v
       });
       clone.kid = altRow2.c?.[kidIdx]?.v || '';
       clone.ksid = altRow2.c?.[ksidIdx]?.v || '';
-    } else {
-      clone.kid = '';
-      clone.ksid = '';
     }
     clone.parent = parentId;
     clone[label] = true;
@@ -274,8 +275,8 @@
 
   const nodeLabel = d => {
     const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
-    const index = idxMode === 'KID' && d.data.kid ? d.data.kid :
-                  idxMode === 'KSID' && d.data.ksid ? d.data.ksid : d.data.id;
+    const index = idxMode === 'KID' ? d.data.kid :
+                  idxMode === 'KSID' ? d.data.ksid : d.data.id;
     // Show prefix only if child's parent has more than one spouse
     const prefix = (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(','))
       ? d.data.spouseGroupNum + '-' : '';
