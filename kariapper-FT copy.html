@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-g</h1>
+  <h1>Kariapper Family Tree-i</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -139,8 +139,10 @@
     console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
     if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
       const clone = { ...d };
-      clone.id = secondaryId;
-      clone.parent = secondaryId.includes('.') ? secondaryId.replace(/\.[^.]+$/, '') : '';
+      // Use quaternary-dID from column AO (index 40), fallback to secondaryId
+      const quaternaryId = (rows[d.index] && rows[d.index].c[40]) ? rows[d.index].c[40].v : '';
+      clone.id = quaternaryId || secondaryId;
+      clone.parent = clone.id.includes('.') ? clone.id.replace(/\.[^.]+$/, '') : '';
       clone.isSecondary = true;
       console.log('📎 Clone created:', clone.id, 'based on', d.id);
       clones.push(clone);
