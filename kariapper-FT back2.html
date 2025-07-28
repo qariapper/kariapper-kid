@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-k</h1>
+  <h1>Kariapper Family Tree-l</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -176,7 +176,8 @@
       console.warn('⚠️ Clone parent not found for', clone.id);
     } else {
       parent.children = parent.children || [];
-      const exists = parent.children.some(c => c.id === clone.id);
+      // Stricter check: only append if not already present (by id and not the same object)
+      const exists = parent.children.some(c => c.id === clone.id && c !== clone);
       if (exists) {
         console.log('⛔ Clone already exists under parent:', parentId);
       } else {
