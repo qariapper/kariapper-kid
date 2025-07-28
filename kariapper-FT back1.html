@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Kariapper Family Tree – Clean 3‑Way Toggle</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="d3.min.js"></script>
+  <style>
+    body { margin: 0; font-family: "Segoe UI", sans-serif; }
+    h1 { text-align: center; margin: 12px 0; }
+    #controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+
+    #controls button {
+      font-size: 16px;
+      padding: 8px 12px;
+      min-height: 40px;
+    }
+    @media (max-width: 600px) {
+      .node-text {
+        font-size: 13px;
+      }
+      #controls {
+        flex-direction: column;
+        align-items: center;
+      }
+      #controls button {
+        width: 90%;
+        max-width: 300px;
+        margin-bottom: 5px;
+      }
+    }
+    #tree_div { width: 100%; height: calc(100vh - 110px); overflow: auto; }
+
+    .trunk, .branch { fill: none; stroke: #888; stroke-width: 1.5px; stroke-linecap: round; }
+    .node-rect { filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
+    .deceased { stroke: green !important; }
+    /* Tooltip glow + animation */
+    .married-text { font-weight: bold; filter: drop-shadow(0 0 2px gold); }
+    @keyframes pulse-glow {
+      0%   { filter: drop-shadow(0 0 2px gold); }
+      50%  { filter: drop-shadow(0 0 5px orange); }
+      100% { filter: drop-shadow(0 0 2px gold); }
+    }
+    .node.married-text.hover-linked text.label {
+      animation: pulse-glow 1s infinite;
+    }
+
+    .node-text { pointer-events: none; text-anchor: start; dominant-baseline: central; font-size: 15px; }
+    .index-dID  { fill: #111; }
+    .index-KID  { fill: #e53935; font-weight: bold; }
+    .index-KSID { fill: #1565c0; font-weight: bold; }
+
+    .toggle-dID  { color: #222; border-color: #bbb; }
+    .toggle-KID  { color: #e53935; border-color: #e53935; }
+    .toggle-KSID { color: #1565c0; border-color: #1565c0; }
+
+    .node { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Kariapper Family Tree-ff</h1>
+  <div id="controls">
+    <button id="btnToggleGen3">Show Gen‑3</button>
+    <button id="btnZoomIn">＋</button>
+    <button id="btnZoomOut">－</button>
+    <button id="btnReset">Reset View</button>
+    <button id="btnIdxToggle" class="toggle-dID" title="Click to show KID">Kariapper‑dID</button>
+  </div>
+  <div id="tree_div">Loading…</div>
+
+  <script>
+(async function(){
+  const sheetID = '1BE7PJAJs3QxHnOsb1z5cKnGHdjQCR8IksorMcAm7Fx8';
+  const initialOpenDepth = 1;
+  const charW = 9;
+  const leftStub = 16;
+  const indexModes = ['dID', 'KID', 'KSID'];
+  let idxMode = indexModes[0];
+  let gen3Collapsed = true;
+
+  const raw = await fetch(`https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?gid=0&headers=1&tqx=out:json`).then(r => r.text());
+  const json = JSON.parse(raw.slice(raw.indexOf('(')+1, raw.lastIndexOf(')')));
+  const cols = json.table.cols.map(c => c.label);
+  const rows = json.table.rows;
+  const col = name => cols.findIndex(h => h.trim().toLowerCase() === name);
+  const idIdx = cols.findIndex(h => /\(dID\)$/i.test(h));
+  const kidIdx = cols.findIndex(h => /\(KID\)$/i.test(h));
+  const ksidIdx = cols.findIndex(h => /\(KSID\)$/i.test(h));
+  const genIdx = col('generation');
+  const nameIdx = cols.findIndex(h => h.trim() === 'Full Name');
+  const spouseIdx = cols.findIndex(h => h.trim().toLowerCase().startsWith('spouse'));
+  const genderIdx = col('gender');
+  const dodIdx = 12;
+  const spouseLinksIdx = col('validspouselinks');
+  const commentsIdx = col('comments');
+  const secondaryIdIdx   = cols.findIndex(h => h.trim() === 'secondary-dID');
+  const tertiaryIdIdx    = cols.findIndex(h => h.trim() === 'tertiarydID');
+  const quaternaryIdIdx  = cols.findIndex(h => h.trim() === 'quaternarydID');
+  const btnZoomIn  = d3.select('#btnZoomIn');
+  const btnZoomOut = d3.select('#btnZoomOut');
+  const btnReset   = d3.select('#btnReset');
+  btnZoomIn .on('click',()=>svg.transition().call(zoom.scaleBy,1.25));
+  btnZoomOut.on('click',()=>svg.transition().call(zoom.scaleBy,0.8));
+  btnReset  .on('click',()=>svg.transition().call(zoom.transform,d3.zoomIdentity));
+
+  const fatherNameIdx = col("father's name");
+  const motherNameIdx = col("mother's name");
+  const flat = rows.map((r, i) => {
+    const get = i2 => (i2 >= 0 && r.c[i2]) ? r.c[i2].v : '';
+    const id = get(idIdx);
+    return {
+      index: i, // ADD this line to track row index
+      id,
+      kid: get(kidIdx),
+      ksid: get(ksidIdx),
+      name: get(nameIdx),
+      gen: +get(genIdx),
+      spouse: get(spouseIdx),
+      gender: get(genderIdx).toLowerCase().startsWith('f') ? 'f' : 'm',
+      dod: get(dodIdx),
+      comments: get(commentsIdx),
+      spouse_dIDs: get(spouseLinksIdx).split(',').map(s => s.trim()).filter(Boolean),
+      parent: id.includes('.') ? id.replace(/\.[^.]+$/, '') : '',
+      children: [],
+      fatherName: get(fatherNameIdx),
+      motherName: get(motherNameIdx),
+      secondaryId: get(secondaryIdIdx),
+      tertiaryId: get(tertiaryIdIdx),
+      quaternaryId: get(quaternaryIdIdx)
+    };
+  }).filter(d => d.id && d.name);
+
+  const clones = [];
+
+  const byId = Object.fromEntries(flat.map(d => [d.id, d]));
+  flat.forEach(d => {
+    if (d.parent && byId[d.parent]) {
+      byId[d.parent].children = byId[d.parent].children || [];
+      if (!byId[d.parent].children.includes(d)) {
+        byId[d.parent].children.push(d);
+      }
+    }
+  });
+
+  // Handle secondary/tertiary/quaternary-dID cases (for dual-lineage/multi-lineage children)
+  console.log('📂 Checking for secondary/tertiary/quaternary-dID at indices', secondaryIdIdx, tertiaryIdIdx, quaternaryIdIdx);
+  flat.forEach(d => {
+    // Prioritize quaternaryId before secondaryId in sourceVariants, and use correct sourceField
+    const sourceVariants = [
+      { key: 'quaternaryId', value: d.quaternaryId, sourceCol: 'motherName', sourceField: 'motherName' },
+      { key: 'tertiaryId', value: d.tertiaryId, sourceCol: 'fatherName', sourceField: 'fatherName' },
+      { key: 'secondaryId', value: d.secondaryId, sourceCol: 'motherName', sourceField: 'motherName' }
+    ];
+
+    sourceVariants.forEach(({ key, value, sourceCol, sourceField }) => {
+      // Only skip if value is empty or same as d.id (allow clones with same id in flat)
+      if (!value || value === d.id) return;
+
+      const parentId = value.includes('.') ? value.replace(/\.[^.]+$/, '') : '';
+      const parentNode = byId[parentId];  // include clones as possible parents
+
+      const correctParentName = normalize(d[sourceCol]);
+      // Additional validation: parentNode must have correct parental name in the relevant field
+      if (!parentNode || normalize(parentNode[sourceField]) !== correctParentName) return;
+
+      const clone = { ...d };
+      // Allow clone ID reuse but avoid infinite loops: only skip if another node (not d) already has this id
+      const existing = flat.find(n => n.id === value && n !== d);
+      if (existing) return;
+      clone.id = value;
+      clone.parent = parentId;
+      clone.isSecondary = true;
+      console.log(`📎 Clone created (${key}):`, clone.id, 'based on', d.id);
+      clones.push(clone);
+    });
+  });
+  flat.push(...clones);
+  // After pushing clones, update byId map with new clones
+  clones.forEach(clone => {
+    byId[clone.id] = clone;
+  });
+  clones.forEach(clone => {
+    console.log('📋 Processing clone:', clone.id, '-> parent:', clone.parent);
+
+    const secParentId = clone.parent;
+    const secParent = byId[secParentId];
+
+    // Replace secParent check block as specified
+    if (!secParent || !secParent.children) {
+      console.warn('⚠️ Secondary parent not found or has no children for', clone.id);
+      return;
+    }
+    const exists = secParent.children.some(c => c.id === clone.id);
+    if (exists) {
+      console.log('⛔ Clone already exists under parent:', secParentId);
+    } else {
+      console.log('✅ Appending clone', clone.id, 'under secondary parent', secParentId);
+      secParent.children.push(clone);
+    }
+  });
+
+
+  // Helper function for normalizing names
+  function normalize(name) {
+    return name?.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  // Assign spouse group number to children
+  flat.forEach(parent => {
+    if (!parent.spouse_dIDs.length) return;
+
+    parent.spouse_dIDs.forEach((spID, i) => {
+      const groupNum = i + 1;
+      const children = flat.filter(child =>
+        child.parent === parent.id &&
+        child.comments && child.comments.includes(spID)
+      );
+      children.forEach(c => c.spouseGroupNum = groupNum);
+    });
+  });
+
+  // Assign spouse group number to children using father/mother name matching with partial label patterns
+  flat.forEach(parent => {
+    const spouseNames = parent.spouse?.split(',').map(s => s.trim()) || [];
+    if (!spouseNames.length) return;
+
+    flat.forEach(child => {
+      if (child.parent === parent.id) {
+        const otherParentName = parent.gender === 'm'
+          ? child.motherName
+          : child.fatherName;
+
+        const normOtherParent = normalize(otherParentName);
+        let matched = false;
+
+        spouseNames.forEach((entry, i) => {
+          const tagMatch = entry.match(/(\d+(st|nd|rd|th)) wife/i);
+          if (tagMatch && normalize(tagMatch[0]) === normOtherParent) {
+            child.spouseGroupNum = i + 1;
+            matched = true;
+          }
+        });
+
+        // fallback: try whole-string match
+        if (!matched) {
+          const groupNum = spouseNames.findIndex(name => normalize(name) === normOtherParent);
+          if (groupNum >= 0) child.spouseGroupNum = groupNum + 1;
+        }
+      }
+    });
+  });
+
+  const rootData = byId['ALK'];
+  if (!rootData) return document.getElementById('tree_div').textContent = '❌ root ALK not found';
+
+  const marriageMap = {};
+  flat.forEach(d => {
+    d.spouse_dIDs.forEach(sp => {
+      if (byId[sp]) {
+        if (!marriageMap[d.id]) marriageMap[d.id] = new Set();
+        if (!marriageMap[sp])   marriageMap[sp]   = new Set();
+        marriageMap[d.id].add(sp);
+        marriageMap[sp].add(d.id);
+      }
+    });
+  });
+
+  // Diagnostic block: Inspect clone nodes before hierarchy build
+  console.log('📊 Inspecting clone nodes before hierarchy build:');
+  ['ALK.1.5.1', 'ALK.6.8'].forEach(id => {
+    const node = flat.find(d => d.id === id);
+    if (!node) return console.warn(`❌ ${id} not found in flat list`);
+    console.log(`🔍 ${id}:`, {
+      parent: node.parent,
+      children: node.children?.map(c => c.id),
+      hasChildren: !!(node.children && node.children.length),
+    });
+  });
+  let root = d3.hierarchy(rootData, d => {
+    if (d.children && d.children.length) return d.children;
+    if (d._children && d._children.length) return d._children;
+    return null;
+  });
+
+  root.descendants().forEach(d => {
+    if (d.depth >= initialOpenDepth && d.children) {
+      d._children = d.children;
+      d.children = null;
+    } else if (d.depth >= initialOpenDepth && d._children) {
+      // Allow collapsed clone nodes (like secondary/tertiary) to expand
+      d.children = d._children;
+      d._children = null;
+    }
+  });
+
+  const svg = d3.select('#tree_div').html('').append('svg').attr('preserveAspectRatio','xMinYMin meet');
+  const gZoom = svg.append('g');
+  const g = gZoom.append('g');
+  const zoom = d3.zoom().scaleExtent([0.5, 2]).on('zoom', e => gZoom.attr('transform', e.transform));
+  svg.call(zoom);
+
+  const tooltip = g.append('text').attr('class','tooltip').style('display','none');
+  // Second tooltip for parent node
+  const tooltipParent = g.append('text').attr('class','tooltip').style('display','none');
+
+  const nodeLabel = d => {
+    const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
+    const index = idxMode === 'KID' && d.data.kid ? d.data.kid :
+                  idxMode === 'KSID' && d.data.ksid ? d.data.ksid : d.data.id;
+    // Show prefix only if child's parent has more than one spouse
+    const prefix = (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(','))
+      ? d.data.spouseGroupNum + '-' : '';
+    return { text: prefix + d.data.name + icon, idx: index };
+  };
+  const boxWidth = d => Math.max(80, (nodeLabel(d).text + ' ' + nodeLabel(d).idx).length * charW + 20);
+
+  const update = () => {
+    const maxLabelChars = d3.max(root.descendants(), d => (nodeLabel(d).text + ' ' + nodeLabel(d).idx).length);
+    const hSpacing = Math.max(200, Math.min(500, maxLabelChars * charW + 60));
+
+    d3.tree().nodeSize([40, hSpacing])(root);
+
+    const xs = root.descendants().map(d => d.x);
+    const ys = root.descendants().flatMap(d => [d.y, d.y + boxWidth(d) + leftStub]);
+    const M = 100;
+    svg.attr('viewBox', [0, 0, Math.max(...ys)-Math.min(...ys)+M*2, Math.max(...xs)-Math.min(...xs)+M*2].join(' '));
+    g.attr('transform', `translate(${M - Math.min(...ys)},${M - Math.min(...xs)})`);
+
+    const nodes = g.selectAll('g.node').data(root.descendants(), d => d.data.id)
+      .join(enter => {
+        const n = enter.append('g').attr('class','node').on('click', (_,d) => toggleNode(d));
+        n.append('rect');
+        n.append('text').attr('class','node-text label');
+        n.append('text').attr('class','node-text index');
+        return n;
+      });
+
+    nodes.attr('transform', d => `translate(${d.parent ? d.y + leftStub : d.y},${d.x})`);
+    
+  nodes.each(function(d){
+    const sel = d3.select(this);
+    const lab = nodeLabel(d);
+    const w = boxWidth(d);
+
+    // 🧹 Remove all previous rects and texts
+    sel.selectAll('rect').remove();
+    sel.selectAll('text').remove();
+
+    // Gender background
+    sel.append('rect')
+      .attr('x', 0)
+      .attr('y', -12)
+      .attr('width', w)
+      .attr('height', 24)
+      .attr('stroke-width', 2)
+      .attr('fill', d.data.gender === 'f' ? '#fbd3e0' :
+                    d.data.gender === 'm' ? '#d0e4f7' : '#eee')
+      .attr('class', () => {
+        let cls = 'node-rect';
+        if (d.data.dod) cls += ' deceased';
+        return cls;
+      })
+      .attr('rx', 4)
+      .attr('ry', 4);
+
+    // Generation overlay (optional, layered on top)
+    const genOverlay = d.data.gen === 1 ? '#eceff4'
+                    : d.data.gen === 2 ? '#e5e9f0'
+                    : d.data.gen === 3 ? '#d8dee9'
+                    : '';
+    if (genOverlay) {
+      sel.append('rect')
+      sel.append('rect')
+        .attr('class', 'gen-overlay')
+        .attr('x', 0)
+        .attr('y', -12)
+        .attr('width', w)
+        .attr('height', 24)
+        .attr('fill', genOverlay)
+        .lower()
+        .attr('rx', 4)
+        .attr('ry', 4);
+    }
+
+    // Append texts fresh
+    sel.append('text')
+      .attr('class','node-text label')
+      .attr('x', 10)
+      .attr('y', 0)
+      .text(lab.text);
+
+    sel.append('text')
+      .attr('class', `node-text index index-${idxMode}`)
+      .attr('x', 10 + lab.text.length * charW)
+      .attr('y', 0)
+      .text(lab.idx ? ' ' + lab.idx : '');
+  });
+
+
+    const nodeById = {};
+    nodes.each(function(d){
+      nodeById[d.data.id] = {
+        rect: d3.select(this).select('rect'),
+        label: d3.select(this).select('text.label'),
+        group: d3.select(this)
+      };
+    });
+
+    nodes.select('text.label')
+        .attr('x', 10);
+
+    nodes.select('text.index')
+        .attr('x', d => {
+          const lab = nodeLabel(d);
+          return 10 + lab.text.length * charW;
+        });
+
+    // Build trunk + stub data
+    const trunks = [], stubs = [];
+    root.descendants().forEach(p => {
+      if (!p.children || !p.children.length) return;
+      const trunkX = d3.min(p.children, c => c.y);
+      const childYs = p.children.map(c => c.x);
+      const y0 = d3.min(childYs), y1 = d3.max(childYs);
+      if (y0 === y1) {
+        const xs = p.children.map(c => c.y);
+        trunks.push({ h: true, x0: Math.min(...xs), x1: Math.max(...xs), y: y0 });
+      } else {
+        trunks.push({ h: false, x: trunkX, y0, y1 });
+      }
+      const parentRight = p.y + boxWidth(p) + (p.depth > 0 ? leftStub : 0);
+      stubs.push({ x0: parentRight, x1: trunkX, y: p.x });
+    });
+    root.descendants().forEach(n => {
+      if (n.depth > 0) stubs.push({ x0: n.y, x1: n.y + leftStub, y: n.x });
+    });
+
+    // Draw trunks
+    g.selectAll('path.trunk').data(trunks, d => d.h ? `h-${d.x0}-${d.x1}-${d.y}` : `v-${d.x}-${d.y0}-${d.y1}`)
+      .join(enter => enter.append('path').attr('class', 'trunk'))
+      .attr('d', d => d.h ? `M${d.x0},${d.y}H${d.x1}` : `M${d.x},${d.y0}V${d.y1}`);
+
+    // Draw stubs
+    g.selectAll('path.stub').data(stubs)
+      .join(enter => enter.append('path').attr('class', 'trunk stub'))
+      .attr('d', d => `M${d.x0},${d.y}H${d.x1}`);
+
+
+    g.selectAll('g.node').classed('married-text', false).classed('hover-linked', false);
+
+    Object.entries(marriageMap).forEach(([id, partners]) => {
+      if (partners.size > 0 && nodeById[id]) {
+        nodeById[id].group.classed('married-text', true);
+      }
+    });
+
+    nodes.on('mouseover', function(_, d){
+      const ids = new Set([d.data.id, ...(marriageMap[d.data.id] || [])]);
+      ids.forEach(id => {
+        const n = nodeById[id];
+        if (n) n.group.classed('hover-linked', true);
+      });
+      const t = d.data.spouse?.trim() ? `Spouse(s): ${d.data.spouse}` : d.data.comments;
+      if (t) {
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+          // On touch devices, show a temporary text near the node or use alert as fallback
+          tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+        } else {
+          tooltip.text(t).attr('x', d.y + leftStub + 5).attr('y', d.x - 18).style('display','block');
+        }
+      }
+
+      // Show parent tooltip if: has parent, has spouseGroupNum, and parent has >1 spouse
+      if (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(',')) {
+        const parent = byId[d.data.parent];
+        const spouseList = parent.spouse?.split(',').map(s => s.trim());
+        const groupLabel = spouseList?.[d.data.spouseGroupNum - 1];
+        if (groupLabel) {
+          tooltipParent
+            .html(null)
+            .append('tspan')
+            .text('From: ')
+            .append('tspan')
+            .text(`${d.data.spouseGroupNum}\u2011${groupLabel}`) // \u2011 = non-breaking hyphen
+            .attr('fill', 'red')
+            .attr('font-weight', 'bold');
+
+          const parentNode = root.descendants().find(n => n.data.id === parent.id);
+          if (parentNode) {
+            tooltipParent
+              .attr('x', parentNode.y + leftStub + 5)
+              .attr('y', parentNode.x - 18)
+              .style('display', 'block');
+          }
+        }
+      }
+    }).on('mouseout', function(_, d){
+      const ids = new Set([d.data.id, ...(marriageMap[d.data.id] || [])]);
+      ids.forEach(id => {
+        const n = nodeById[id];
+        if (n) n.group.classed('hover-linked', false);
+      });
+      tooltip.style('display', 'none');
+      tooltipParent.style('display', 'none');
+    });
+  };
+
+  function toggleNode(d){
+    if (d.children) { d._children = d.children; d.children = null; }
+    else if (d._children) { d.children = d._children; d._children = null; }
+    update();
+  }
+
+  d3.select('#btnToggleGen3').on('click', () => {
+    const showGen3 = d3.select('#btnToggleGen3').text().includes('Gen‑3');
+
+    // Reset: expand Gen‑2, collapse Gen‑3
+    root.descendants().forEach(n => {
+      if (n.depth === 1 && n._children) {
+        n.children = n._children;
+        n._children = null;
+      }
+      if (n.depth === 2 && n.children) {
+        n._children = n.children;
+        n.children = null;
+      }
+    });
+
+    if (showGen3) {
+      // Expand all Gen‑3
+      root.descendants().forEach(n => {
+        if (n.depth === 1 && n._children) {
+          n.children = n._children;
+          n._children = null;
+        }
+      });
+      d3.select('#btnToggleGen3').text('Show Gen‑2');
+    } else {
+      // Collapse all Gen‑3
+      root.descendants().forEach(n => {
+        if (n.depth === 1 && n.children) {
+          n._children = n.children;
+          n.children = null;
+        }
+      });
+      d3.select('#btnToggleGen3').text('Show Gen‑3');
+    }
+
+    update();
+  });
+
+  d3.select('#btnIdxToggle').on('click', () => {
+    const next = (indexModes.indexOf(idxMode) + 1) % indexModes.length;
+    idxMode = indexModes[next];
+    const btn = d3.select('#btnIdxToggle');
+    btn.attr('class', `toggle-${idxMode}`);
+    btn.text(`Kariapper-${idxMode}`);
+    btn.attr('title', `Click to show ${indexModes[(next + 1) % indexModes.length]}`);
+    update();
+  });
+
+  update();
+})();
+  </script>
+</body>
+</html>
