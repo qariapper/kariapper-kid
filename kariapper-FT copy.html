@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-i</h1>
+  <h1>Kariapper Family Tree-j</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -139,9 +139,15 @@
     console.log(`🧪 Row ${d.index}: dID=${d.id}, secondary-dID=`, secondaryId);
     if (secondaryId && secondaryId !== d.id && !flat.some(x => x.id === secondaryId)) {
       const clone = { ...d };
-      // Use quaternary-dID from column AO (index 40), fallback to secondaryId
-      const quaternaryId = (rows[d.index] && rows[d.index].c[40]) ? rows[d.index].c[40].v : '';
-      clone.id = quaternaryId || secondaryId;
+      // Retrieve all three variant IDs: secondaryId (AD, 29), tertiaryId (AN, 39), quaternaryId (AO, 40)
+      const row = rows[d.index] && rows[d.index].c;
+      const quaternaryId = row && row[40] ? row[40].v : '';
+      const tertiaryId   = row && row[39] ? row[39].v : '';
+      const secondaryCloneId = row && row[38] ? row[38].v : '';
+      // Use correct clone.id based on which variant this is
+      clone.id = (secondaryId === quaternaryId) ? quaternaryId :
+                 (secondaryId === tertiaryId)   ? tertiaryId   :
+                 secondaryCloneId || secondaryId;
       clone.parent = clone.id.includes('.') ? clone.id.replace(/\.[^.]+$/, '') : '';
       clone.isSecondary = true;
       console.log('📎 Clone created:', clone.id, 'based on', d.id);
