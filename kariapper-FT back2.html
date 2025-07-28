@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-j</h1>
+  <h1>Kariapper Family Tree-k</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -149,6 +149,8 @@
       const altId = (rows[d.index] && rows[d.index].c[idx]) ? rows[d.index].c[idx].v : '';
       // Avoid duplicates (flat or clones)
       if (!altId || altId === d.id) return;
+      // Skip creating a clone if altId already exists in flat
+      if (flat.some(x => x.id === altId)) return;
       // Remove existing clones of this id from other parents (e.g., wrong lineage)
       const existingCloneIndex = clones.findIndex(c => c.id === altId);
       if (existingCloneIndex !== -1) clones.splice(existingCloneIndex, 1);
