@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-k</h1>
+  <h1>Kariapper Family Tree-l</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -144,10 +144,13 @@
         const secondaryCloneId = row && row[38] ? row[38].v : '';
         const tertiaryId   = row && row[39] ? row[39].v : '';
         const quaternaryId = row && row[40] ? row[40].v : '';
-        // Use correct clone.id based on lineage route
-        const useId = secondaryId === tertiaryId ? tertiaryId :
-                      secondaryId === quaternaryId ? quaternaryId :
-                      secondaryCloneId || secondaryId;
+        // Use correct clone.id based on lineage route (stricter logic: quaternary always from AO)
+        let useId = secondaryCloneId || secondaryId;
+        if (secondaryId === tertiaryId) {
+          useId = tertiaryId;
+        } else if (secondaryId === quaternaryId) {
+          useId = quaternaryId;
+        }
         clone.id = useId;
         clone.parent = useId.includes('.') ? useId.replace(/\.[^.]+$/, '') : '';
         clone.isSecondary = true;
