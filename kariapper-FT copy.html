@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-n</h1>
+  <h1>Kariapper Family Tree-o</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -142,14 +142,12 @@
         // Retrieve all three variant IDs: secondaryCloneId (AD, 38), tertiaryId (AN, 39), quaternaryId (AO, 40)
         const row = rows[d.index] && rows[d.index].c;
         const secondaryCloneId = row && row[38] ? row[38].v : '';
-        const tertiaryId   = row && row[39] ? row[39].v : '';
-        const quaternaryId = row && row[40] ? row[40].v : '';
-        // Use correct clone.id based on lineage route (stricter logic)
+        // New logic: force quaternary line to pick from AO (index 40)
         let useId = secondaryCloneId || secondaryId;
-        if (secondaryId === tertiaryId) {
-          useId = tertiaryId;
-        } else if (secondaryId === quaternaryId) {
-          useId = quaternaryId;
+        if (row && row[40] && row[40].v === d.id) {
+          useId = row[40].v; // force quaternary line to pick from AO
+        } else if (row && row[39] && row[39].v === d.id) {
+          useId = row[39].v; // tertiary line
         }
         clone.id = useId;
         clone.parent = useId.includes('.') ? useId.replace(/\.[^.]+$/, '') : '';
