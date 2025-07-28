@@ -352,10 +352,7 @@
       .text(lab.text);
 
     sel.append('text')
-      .attr('class', 'node-text index')
-      .classed('index-dID', idxMode === 'dID')
-      .classed('index-KID', idxMode === 'KID')
-      .classed('index-KSID', idxMode === 'KSID')
+      .attr('class', `node-text index index-${idxMode}`)
       .attr('x', 10 + lab.text.length * charW)
       .attr('y', 0)
       .text(lab.idx ? ' ' + lab.idx : '');
