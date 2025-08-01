@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-s</h1>
+  <h1>Kariapper Family Tree-aa</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -422,8 +422,8 @@
     root.descendants().forEach(n => {
       if (n.depth > 0) {
         stubs.push({
-          x0: n.parent ? n.parent.y + boxWidth(n.parent) + leftStub : 0,
-          x1: n.y,
+          x0: n.y,
+          x1: n.y + leftStub,
           y: n.x,
           isClone: n.data?.isClone
         });
