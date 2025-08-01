@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-x</h1>
+  <h1>Kariapper Family Tree-y</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -148,12 +148,17 @@
     const clone = JSON.parse(JSON.stringify(byId[origId]));
     clone.id = altId;
     // Fix for ensuring label values are tracked for index toggling
-    const altIndex = rows.findIndex(r => r?.c?.[idIdx]?.v === altId);
-    if (altIndex !== -1) {
-      clone.kid  = rows[altIndex]?.c?.[kidIdx]?.v || '';
-      clone.ksid = rows[altIndex]?.c?.[ksidIdx]?.v || '';
+    // Updated logic to fetch alternate KID and KSID from clone columns
+    const altRow = rows.find(r =>
+      r?.c?.[idIdx]?.v === altId ||
+      r?.c?.[colMap['secondary-did']]?.v === altId ||
+      r?.c?.[colMap['tertiarydid']]?.v === altId ||
+      r?.c?.[colMap['quaternarydid']]?.v === altId
+    );
+    if (altRow) {
+      clone.kid = altRow.c?.[kidIdx]?.v || '';
+      clone.ksid = altRow.c?.[ksidIdx]?.v || '';
     }
-    // Remove old altRow2 block (now handled above)
     clone.parent = parentId;
     clone[label] = true;
     clone.children = []; // Children will be reattached as needed by D3
