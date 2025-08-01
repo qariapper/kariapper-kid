@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-y</h1>
+  <h1>Kariapper Family Tree-a</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -147,6 +147,14 @@
     // Deep clone object
     const clone = JSON.parse(JSON.stringify(byId[origId]));
     clone.id = altId;
+    // Attempt to extract KID/KSID using the same row search logic used for rendering
+    clone.kid = '';
+    clone.ksid = '';
+    const altRow = rows.find(r => r?.c?.[idIdx]?.v === altId);
+    if (altRow) {
+      clone.kid = altRow.c?.[kidIdx]?.v || '';
+      clone.ksid = altRow.c?.[ksidIdx]?.v || '';
+    }
     clone.parent = parentId;
     clone[label] = true;
     clone.children = []; // Children will be reattached as needed by D3
