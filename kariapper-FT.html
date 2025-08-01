@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-y</h1>
+  <h1>Kariapper Family Tree-z</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -158,6 +158,21 @@
     if (altRow) {
       clone.kid = altRow.c?.[kidIdx]?.v || '';
       clone.ksid = altRow.c?.[ksidIdx]?.v || '';
+    }
+    // Determine correct index for kid/ksid from which clone type is being handled
+    const cloneType = cloneTypes.find(ct => ct.idx >= 0 && rows[byId[origId].index]?.c[ct.idx]?.v === altId);
+    if (cloneType) {
+      const cloneRow = rows[clone.index];
+      if (cloneType.label === 'secondaryId') {
+        clone.kid = cloneRow?.c?.[colMap['kid2']]?.v || '';
+        clone.ksid = cloneRow?.c?.[colMap['ksid2']]?.v || '';
+      } else if (cloneType.label === 'tertiaryId') {
+        clone.kid = cloneRow?.c?.[colMap['kid3']]?.v || '';
+        clone.ksid = cloneRow?.c?.[colMap['ksid3']]?.v || '';
+      } else if (cloneType.label === 'quaternaryId') {
+        clone.kid = cloneRow?.c?.[colMap['kid4']]?.v || '';
+        clone.ksid = cloneRow?.c?.[colMap['ksid4']]?.v || '';
+      }
     }
     clone.parent = parentId;
     clone[label] = true;
