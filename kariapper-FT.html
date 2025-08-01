@@ -32,6 +32,7 @@
     #tree_div { width: 100%; height: calc(100vh - 110px); overflow: auto; }
 
     .trunk, .branch { fill: none; stroke: #888; stroke-width: 1.5px; stroke-linecap: round; }
+    .stub.clone { stroke-dasharray: 4 2; }
     .node-rect { rx: 4; ry: 4; filter: drop-shadow(2px 2px 2px rgba(0,0,0,.15)); stroke: #888; stroke-width: 2px; }
     .deceased { stroke: green !important; }
     /* Tooltip glow + animation */
@@ -58,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-z</h1>
+  <h1>Kariapper Family Tree-q</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -177,6 +178,7 @@
     clone.parent = parentId;
     clone[label] = true;
     clone.children = []; // Children will be reattached as needed by D3
+    clone.isClone = true;
     byId[altId] = clone;
     flat.push(clone);
     // Attach to new parent if not already present
@@ -418,7 +420,14 @@
       stubs.push({ x0: parentRight, x1: trunkX, y: p.x });
     });
     root.descendants().forEach(n => {
-      if (n.depth > 0) stubs.push({ x0: n.y, x1: n.y + leftStub, y: n.x });
+      if (n.depth > 0) {
+        stubs.push({
+          x0: n.y,
+          x1: n.y + leftStub,
+          y: n.x,
+          isClone: n.data?.isClone
+        });
+      }
     });
 
     // Draw trunks
@@ -428,7 +437,8 @@
 
     // Draw stubs
     g.selectAll('path.stub').data(stubs)
-      .join(enter => enter.append('path').attr('class', 'trunk stub'))
+      .join(enter => enter.append('path'))
+      .attr('class', d => `trunk stub${d.isClone ? ' clone' : ''}`)
       .attr('d', d => `M${d.x0},${d.y}H${d.x1}`);
 
 
