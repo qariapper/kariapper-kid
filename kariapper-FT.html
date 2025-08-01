@@ -58,7 +58,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-aay</h1>
+  <h1>Kariapper Family Tree-x</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -147,14 +147,13 @@
     // Deep clone object
     const clone = JSON.parse(JSON.stringify(byId[origId]));
     clone.id = altId;
-    // Attempt to extract KID/KSID using the same row search logic used for rendering
-    clone.kid = '';
-    clone.ksid = '';
-    const altRow = rows.find(r => r?.c?.[idIdx]?.v === altId);
-    if (altRow) {
-      clone.kid = altRow.c?.[kidIdx]?.v || '';
-      clone.ksid = altRow.c?.[ksidIdx]?.v || '';
+    // Fix for ensuring label values are tracked for index toggling
+    const altIndex = rows.findIndex(r => r?.c?.[idIdx]?.v === altId);
+    if (altIndex !== -1) {
+      clone.kid  = rows[altIndex]?.c?.[kidIdx]?.v || '';
+      clone.ksid = rows[altIndex]?.c?.[ksidIdx]?.v || '';
     }
+    // Remove old altRow2 block (now handled above)
     clone.parent = parentId;
     clone[label] = true;
     clone.children = []; // Children will be reattached as needed by D3
@@ -170,6 +169,7 @@
     } else {
       //console.warn('⚠️ Clone parent not found for', altId);
     }
+    console.log('✅ Clone complete:', { cloneId: clone.id, parentId: clone.parent, kid: clone.kid, ksid: clone.ksid });
   }
 
   cloneTypes.forEach(({ label, idx }) => {
@@ -267,11 +267,12 @@
 
   const nodeLabel = d => {
     const icon = d.data.gender === 'f' ? ' ♀' : ' ♂';
-    const index = idxMode === 'KID' && d.data.kid ? d.data.kid :
-                  idxMode === 'KSID' && d.data.ksid ? d.data.ksid : d.data.id;
+    const index = idxMode === 'KID' ? d.data.kid :
+                  idxMode === 'KSID' ? d.data.ksid : d.data.id;
     // Show prefix only if child's parent has more than one spouse
     const prefix = (d.parent && d.data.spouseGroupNum && byId[d.data.parent]?.spouse?.includes(','))
       ? d.data.spouseGroupNum + '-' : '';
+    console.log('🏷️ nodeLabel:', { id: d.data.id, mode: idxMode, kid: d.data.kid, ksid: d.data.ksid });
     return { text: prefix + d.data.name + icon, idx: index };
   };
   const boxWidth = d => Math.max(80, (nodeLabel(d).text + ' ' + nodeLabel(d).idx).length * charW + 20);
@@ -352,7 +353,10 @@
       .text(lab.text);
 
     sel.append('text')
-      .attr('class', `node-text index index-${idxMode}`)
+      .attr('class', 'node-text index')
+      .classed('index-dID', idxMode === 'dID')
+      .classed('index-KID', idxMode === 'KID')
+      .classed('index-KSID', idxMode === 'KSID')
       .attr('x', 10 + lab.text.length * charW)
       .attr('y', 0)
       .text(lab.idx ? ' ' + lab.idx : '');
