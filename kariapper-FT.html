@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-cc</h1>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -347,7 +347,8 @@
         let cls = 'node-rect';
         if (d.data.dod) cls += ' deceased';
         return cls;
-      });
+      })
+      .attr('stroke-dasharray', d.data.isClone ? '4 2' : null);
 
     // Generation overlay (optional, layered on top)
     const genOverlay = d.data.gen === 1 ? '#eceff4'
