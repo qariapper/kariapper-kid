@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-ii</h1>
+  <h1>Kariapper Family Tree-jj</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -606,6 +606,7 @@
     root = d3.hierarchy(fullRoot.data, d => d.children);
     if (!term) {
       update();
+      document.getElementById("btnSearch").textContent = "Search";
       return;
     }
 
@@ -650,9 +651,20 @@
     update();
   }
 
-  document.getElementById("btnSearch").addEventListener("click", () => {
+  const btnSearch = document.getElementById("btnSearch");
+  btnSearch.addEventListener("click", () => {
     const term = document.getElementById("searchBox").value.trim();
-    applySearch(term);
+    if (btnSearch.textContent === "Clear Search") {
+      document.getElementById("searchBox").value = "";
+      btnSearch.textContent = "Search";
+      root = d3.hierarchy(fullRoot.data, d => d.children);
+      update();
+    } else {
+      applySearch(term);
+      if (term) {
+        btnSearch.textContent = "Clear Search";
+      }
+    }
   });
 
   document.getElementById("searchBox").addEventListener("keydown", e => {
