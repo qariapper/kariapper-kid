@@ -59,7 +59,10 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-ee</h1>
+  <h1>Kariapper Family Tree-xx</h1>
+  <div style="text-align: center; margin: 10px;">
+    <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
+  </div>
   <div id="controls">
     <button id="btnToggleGen3">Show Gen‑3</button>
     <button id="btnZoomIn">＋</button>
@@ -78,6 +81,7 @@
   const indexModes = ['dID', 'KID', 'KSID'];
   let idxMode = indexModes[0];
   let gen3Collapsed = true;
+  let searchTerm = "";
 
   const raw = await fetch(`https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?gid=0&headers=1&tqx=out:json`).then(r => r.text());
   const json = JSON.parse(raw.slice(raw.indexOf('(')+1, raw.lastIndexOf(')')));
@@ -505,6 +509,37 @@
       tooltip.style('display', 'none');
       tooltipParent.style('display', 'none');
     });
+    if (searchTerm) {
+      const match = root.descendants().find(d =>
+        d.data.name?.toLowerCase().includes(searchTerm) ||
+        d.data.id?.toLowerCase() === searchTerm ||
+        d.data.kid?.toLowerCase() === searchTerm ||
+        d.data.ksid?.toLowerCase() === searchTerm
+      );
+
+      if (match) {
+        // Create a Set of ids to keep: match, ancestors, siblings, their children
+        const keepIds = new Set();
+        let current = match;
+        while (current) {
+          keepIds.add(current.data.id);
+          if (current.parent) {
+            current.parent.children?.forEach(sib => keepIds.add(sib.data.id));
+          }
+          current = current.parent;
+        }
+
+        root.eachBefore(n => {
+          if (!keepIds.has(n.data.id)) {
+            n._children = n.children;
+            n.children = null;
+          } else if (n._children) {
+            n.children = n._children;
+            n._children = null;
+          }
+        });
+      }
+    }
   };
 
   function toggleNode(d){
@@ -562,6 +597,10 @@
   });
 
   update();
+  document.getElementById("searchBox").addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    update();
+  });
 })();
   </script>
 </body>
