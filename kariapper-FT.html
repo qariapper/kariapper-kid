@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-zz</h1>
+  <h1>Kariapper Family Tree-aa</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -610,14 +610,14 @@
 
     const lowerTerm = term.toLowerCase();
     const match = flat.find(d =>
-      d.name?.toLowerCase().includes(lowerTerm) ||
+      d.name?.toLowerCase() === lowerTerm ||
       d.id?.toLowerCase() === lowerTerm ||
       d.kid?.toLowerCase() === lowerTerm ||
       d.ksid?.toLowerCase() === lowerTerm
     );
 
     if (!match) {
-      alert("No match found.");
+      alert(`No match found for "${term}".`);
       return;
     }
 
