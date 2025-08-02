@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-cc</h1>
+  <h1>Kariapper Family Tree-dd</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -612,9 +612,9 @@
 
     // Search column D, AM, AN, AO
     const allValidIds = new Set();
-    const allCols = ['(dID)', 'secondary-did', 'tertiarydID', 'quaternarydID'];
+    const allCols = ['dID', 'secondary-dID', 'tertiary-dID', 'quaternary-dID'];
     allCols.forEach(colName => {
-      const idx = cols.findIndex(h => h.trim().toLowerCase() === colName.toLowerCase());
+      const idx = cols.findIndex(h => h.trim() === colName);
       if (idx >= 0) {
         rows.forEach(r => {
           const cell = r.c?.[idx];
