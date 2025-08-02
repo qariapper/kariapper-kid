@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-bb</h1>
+  <h1>Kariapper Family Tree-cc</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -609,34 +609,41 @@
     }
 
     const lowerTerm = term.toLowerCase().trim();
-    // Revised exact-match block
-    const match = flat.find(d =>
-      d.name?.toLowerCase().trim() === lowerTerm ||
-      d.id?.toLowerCase().trim() === lowerTerm ||
-      d.kid?.toLowerCase().trim() === lowerTerm ||
-      d.ksid?.toLowerCase().trim() === lowerTerm
-    );
 
-    if (!match) {
+    // Search column D, AM, AN, AO
+    const allValidIds = new Set();
+    const allCols = ['(dID)', 'secondary-did', 'tertiarydID', 'quaternarydID'];
+    allCols.forEach(colName => {
+      const idx = cols.findIndex(h => h.trim().toLowerCase() === colName.toLowerCase());
+      if (idx >= 0) {
+        rows.forEach(r => {
+          const cell = r.c?.[idx];
+          if (cell && cell.v) allValidIds.add(cell.v.toLowerCase());
+        });
+      }
+    });
+
+    if (!allValidIds.has(lowerTerm)) {
       alert(`No match found for "${term}".`);
       return;
     }
 
-    // Build root from fresh base
-    root = d3.hierarchy(byId['ALK'], d => d.children);
-    root.each(n => { n._children = n.children; n.children = null; });
+    // Find node in current tree by exact d.data.id match
+    const matchedNode = root.descendants().find(d => d.data.id.toLowerCase() === lowerTerm);
 
+    if (!matchedNode) {
+      alert(`Match "${term}" found in sheet but not displayed in tree.`);
+      return;
+    }
+
+    // Isolate the matched node and its ancestors
+    root.each(n => { n._children = n.children; n.children = null; });
     const keepIds = new Set();
-    // Use direct lookup for current node
-    let current = root.descendants().find(d => d.data.id === match.id);
+    let current = matchedNode;
     while (current) {
       keepIds.add(current.data.id);
       if (current.parent) {
         keepIds.add(current.parent.data.id);
-        current.parent._children?.forEach(sib => {
-          keepIds.add(sib.data.id);
-          sib.children?.forEach(c => keepIds.add(c.data.id));
-        });
       }
       current = current.parent;
     }
