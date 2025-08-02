@@ -552,6 +552,7 @@
   }
 
   d3.select('#btnToggleGen3').on('click', () => {
+    root = d3.hierarchy(fullRoot.data, d => d.children);
     const showGen3 = d3.select('#btnToggleGen3').text().includes('Gen‑3');
 
     // Reset: expand Gen‑2, collapse Gen‑3
@@ -590,12 +591,12 @@
   });
 
   d3.select('#btnIdxToggle').on('click', () => {
-    root = d3.hierarchy(fullRoot.data, d => d.children); // Reset to full tree
-    idxMode = indexModes[(indexModes.indexOf(idxMode) + 1) % indexModes.length];
+    const next = (indexModes.indexOf(idxMode) + 1) % indexModes.length;
+    idxMode = indexModes[next];
     const btn = d3.select('#btnIdxToggle');
     btn.attr('class', `toggle-${idxMode}`);
     btn.text(`Kariapper-${idxMode}`);
-    btn.attr('title', `Click to show ${indexModes[(indexModes.indexOf(idxMode) + 1) % indexModes.length]}`);
+    btn.attr('title', `Click to show ${indexModes[(next + 1) % indexModes.length]}`);
     update();
   });
 
