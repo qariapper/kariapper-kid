@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-ee</h1>
+  <h1>Kariapper Family Tree-ff</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -610,33 +610,39 @@
 
     const lowerTerm = term.toLowerCase().trim();
 
-    // Find the node by ID only (case-insensitive)
-    const match = root.descendants().find(d => d.data.id.toLowerCase() === lowerTerm);
-
-    if (!match) {
+    // Search the entire flat array instead of the tree
+    const found = flat.find(d => d.id.toLowerCase() === lowerTerm);
+    if (!found) {
       alert(`No match found for "${term}".`);
       return;
     }
 
-    // Collapse all first
-    root.each(n => { n._children = n.children; n.children = null; });
-
-    // Expand only the matched node
-    const keepIds = new Set();
-    keepIds.add(match.data.id);
-
-    root.each(n => {
-      if (keepIds.has(n.data.id)) {
-        if (n._children) {
-          n.children = n._children;
-          n._children = null;
-        }
-      } else {
-        n._children = n.children;
-        n.children = null;
+    // Rebuild the root hierarchy from scratch
+    const isolateTree = (targetId) => {
+      const path = [];
+      let node = byId[targetId];
+      while (node) {
+        path.unshift(node.id);
+        node = byId[node.parent];
       }
-    });
 
+      let rootNode = null;
+      let current = null;
+      path.forEach(id => {
+        const orig = byId[id];
+        const newNode = {
+          ...orig,
+          children: []
+        };
+        if (!rootNode) rootNode = newNode;
+        if (current) current.children.push(newNode);
+        current = newNode;
+      });
+      return rootNode;
+    };
+
+    const subtree = isolateTree(found.id);
+    root = d3.hierarchy(subtree, d => d.children);
     update();
   }
 
