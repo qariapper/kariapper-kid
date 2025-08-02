@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-aa</h1>
+  <h1>Kariapper Family Tree-bb</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -608,12 +608,13 @@
       return;
     }
 
-    const lowerTerm = term.toLowerCase();
+    const lowerTerm = term.toLowerCase().trim();
+    // Revised exact-match block
     const match = flat.find(d =>
-      d.name?.toLowerCase() === lowerTerm ||
-      d.id?.toLowerCase() === lowerTerm ||
-      d.kid?.toLowerCase() === lowerTerm ||
-      d.ksid?.toLowerCase() === lowerTerm
+      d.name?.toLowerCase().trim() === lowerTerm ||
+      d.id?.toLowerCase().trim() === lowerTerm ||
+      d.kid?.toLowerCase().trim() === lowerTerm ||
+      d.ksid?.toLowerCase().trim() === lowerTerm
     );
 
     if (!match) {
@@ -626,6 +627,7 @@
     root.each(n => { n._children = n.children; n.children = null; });
 
     const keepIds = new Set();
+    // Use direct lookup for current node
     let current = root.descendants().find(d => d.data.id === match.id);
     while (current) {
       keepIds.add(current.data.id);
