@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-jj</h1>
+  <h1>Kariapper Family Tree-kk</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -671,6 +671,9 @@
     if (e.key === "Enter") {
       const term = e.target.value.trim();
       applySearch(term);
+      if (term) {
+        btnSearch.textContent = "Clear Search";
+      }
     }
   });
 })();
