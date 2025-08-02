@@ -59,7 +59,7 @@
   </style>
 </head>
 <body>
-  <h1>Kariapper Family Tree-yy</h1>
+  <h1>Kariapper Family Tree-zz</h1>
   <div style="text-align: center; margin: 10px;">
     <input id="searchBox" type="text" placeholder="Search by Name, dID, KID, or KSID" style="width: 80%; max-width: 500px; padding: 8px; font-size: 16px;" />
     <button id="btnSearch" style="margin-left: 10px; padding: 8px 12px; font-size: 16px;">Search</button>
@@ -603,7 +603,7 @@
 
   function applySearch(term) {
     if (!term) {
-      root = fullRoot.copy();  // reset to full tree
+      root = d3.hierarchy(byId['ALK'], d => d.children);
       update();
       return;
     }
@@ -621,34 +621,31 @@
       return;
     }
 
-    // Rebuild root tree
+    // Build root from fresh base
     root = d3.hierarchy(byId['ALK'], d => d.children);
+    root.each(n => { n._children = n.children; n.children = null; });
 
-    // Collapse all first
-    root.each(n => {
-      n._children = n.children;
-      n.children = null;
-    });
-
-    // Keep target and its ancestors + siblings + their children
     const keepIds = new Set();
     let current = root.descendants().find(d => d.data.id === match.id);
     while (current) {
       keepIds.add(current.data.id);
       if (current.parent) {
-        current.parent.children = current.parent._children;
-        current.parent._children = null;
-        current.parent.children?.forEach(sib => {
+        keepIds.add(current.parent.data.id);
+        current.parent._children?.forEach(sib => {
           keepIds.add(sib.data.id);
-          sib.children = sib._children;
-          sib._children = null;
+          sib.children?.forEach(c => keepIds.add(c.data.id));
         });
       }
       current = current.parent;
     }
 
     root.each(n => {
-      if (!keepIds.has(n.data.id)) {
+      if (keepIds.has(n.data.id)) {
+        if (n._children) {
+          n.children = n._children;
+          n._children = null;
+        }
+      } else {
         n._children = n.children;
         n.children = null;
       }
